@@ -1,6 +1,20 @@
 % Generates a stand-alone pdf file of the current plot, with all the LaTeX 
 % goodies.
 %
+% Parameters (all are STRINGS):
+%   name:      Name of the image file (without extension).
+%   caption:   The caption of the image. LaTeX code is allowed.
+%   destdir:   Destination directory for the images.
+%   xlab:      label for x axis. LaTeX code allowed.
+%   ylab:      label for y axis. LaTeX code allowed.
+%   ylabrule:  Ruler size to move the y label closer or further away. You'll 
+%              have to tweak this a bit to get it looking OK.
+%              e.g. "-1.5cm"
+%   width:     Determines the horizontal size of the image in points
+%              e.g. "1000"
+%   height:    Determines the vertical size of the image in points
+%              e.g. "800"
+%
 % Dependencies:
 %   Octave with -depslatexstandalone output for print()
 %   epstopdf
