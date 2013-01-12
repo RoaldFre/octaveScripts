@@ -56,6 +56,6 @@ function makeGraph(name,caption,destdir,relImgDir,xlab,ylab,ylabrule,width,heigh
 
 	system(['cd ',destdir,'; ',...
 		'mv ',name,'.tex ',name,'.dat.tex; ',...
-		'echo "',wrapper,'" > ',name,'.tex;']);
+		'echo -e "',wrapper,'" > ',name,'.tex;']);
 end
 
