@@ -22,5 +22,9 @@ mantissa = num / 10^exponent;
 if -3 <= exponent && exponent <= 3
 	str = num2str(num);
 else
-	str = [num2str(mantissa),' \cdot 10^{',num2str(exponent),'}'];
+	if mantissa == 1
+		str = ['10^{',num2str(exponent),'}'];
+	else
+		str = [num2str(mantissa),' \cdot 10^{',num2str(exponent),'}'];
+	end
 end
