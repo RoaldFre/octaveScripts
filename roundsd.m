@@ -44,7 +44,7 @@ if ~isnumeric(x)
 		error('X argument must be numeric.')
 end
 
-if ~isnumeric(n) | numel(n) ~= 1 | n < 0 | mod(n,1) ~= 0
+if ~isnumeric(n) || numel(n) ~= 1 || n < 0 || mod(n,1) ~= 0
 	error('N argument must be a scalar positive integer.')
 end
 
