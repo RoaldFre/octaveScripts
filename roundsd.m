@@ -48,5 +48,9 @@ if ~isnumeric(n) || numel(n) ~= 1 || n < 0 || mod(n,1) ~= 0
 	error('N argument must be a scalar positive integer.')
 end
 
+if n==0
+	error("Requested zero significant digits.");
+end
+
 og = 10.^(floor(log10(abs(x)) - n + 1));
 y = round(x./og).*og;

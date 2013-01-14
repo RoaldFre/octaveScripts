@@ -45,8 +45,12 @@ function makeGraph(name,caption,destdir,relImgDir,xlab,ylab,ylabrule,width,heigh
 	wrapper = strrep(wrapper, '\', '\\');
 	wrapper = strrep(wrapper, '$', '\$');
 
-	xlabel(xlab);
-	ylabel(['\rule{0pt}{',ylabrule,'}',ylab]);
+	if (xlab != '')
+		xlabel(xlab);
+	end
+	if (xlab != '')
+		ylabel(['\rule{0pt}{',ylabrule,'}',ylab]);
+	end
 
 	system(['mkdir -p ',destdir,' &>/dev/null']);
 	print([destdir,'/',name,'.tex'],'-depslatex',['-S',width,',',height]);
