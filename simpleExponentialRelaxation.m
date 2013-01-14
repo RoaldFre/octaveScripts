@@ -24,7 +24,8 @@ maxIterations = 1000;
                weights);
 
 tau = p(1);
-disp("This should be +/- diagonal:")
-disp(covp);
+%Only one parameter: hence covp is just a number, not a matrix
+%disp("This should be +/- diagonal:")
+%disp(covp);
 errs = sqrt(diag(covp));
 tauStddev = errs(1);
