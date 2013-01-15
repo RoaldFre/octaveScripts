@@ -22,8 +22,12 @@
 %   pdfcrop
 function makeGraphPresentation(name,destdir,xlab,ylab,ylabrule,width,height);
 	relImgDir = '.';
-	xlabel(xlab);
-	ylabel(['\rule{0pt}{',ylabrule,'}',ylab]);
+	if (numel(xlab) != 0) % not the empty string ''
+		xlabel(xlab);
+	end
+	if (numel(ylab) != 0) % not the empty string ''
+		ylabel(['\rule{0pt}{',ylabrule,'}',ylab]);
+	end
 
 	print([destdir,'/',name,'.tex'],'-depslatexstandalone',['-S',width,',',height]);
 

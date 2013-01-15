@@ -45,10 +45,10 @@ function makeGraph(name,caption,destdir,relImgDir,xlab,ylab,ylabrule,width,heigh
 	wrapper = strrep(wrapper, '\', '\\');
 	wrapper = strrep(wrapper, '$', '\$');
 
-	if (xlab != '')
+	if (numel(xlab) != 0) % not the empty string ''
 		xlabel(xlab);
 	end
-	if (xlab != '')
+	if (numel(ylab) != 0) % not the empty string ''
 		ylabel(['\rule{0pt}{',ylabrule,'}',ylab]);
 	end
 
