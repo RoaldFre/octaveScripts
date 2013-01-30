@@ -18,10 +18,10 @@ end
 
 prefixes = {'\,y','\,z','\,a','\,f','\,p','\,n','\,\mu','\,m','','\,k','\,M','\,G','\,T','\,P','\,E','\,Z','\,Y'};
 
-exponent = floor(log10(abs(num)))
-powerBy3 = floor(exponent/3)
-prefix = prefixes{powerBy3 + 9}
-mantissa = num / 10^(3*powerBy3)
+exponent = floor(log10(abs(num)));
+powerBy3 = floor(exponent/3);
+prefix = prefixes{powerBy3 + 9};
+mantissa = num / 10^(3*powerBy3);
 
 %This can be commented to allow for mili to be used form 0.999 downwards
 if -2 <= exponent && exponent <= 0
