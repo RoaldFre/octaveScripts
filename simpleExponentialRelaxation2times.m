@@ -7,37 +7,33 @@
 % function [tau1, tau2, amplFrac, tau1Stddev, tau2Stddev, amplFracStddev] = simpleExponentialRelaxation2times(xs, ys, guessTau1, guessTau2, guessAmplFrac, yerr)
 function [tau1, tau2, amplFrac, tau1Stddev, tau2Stddev, amplFracStddev] = simpleExponentialRelaxation2times(xs, ys, guessTau1, guessTau2, guessAmplFrac, yerr)
 
-if (nargin < 5)
+if (nargin < 6)
        error("not enough required arguments!");
 end
-if (nargin < 6)
-       yerr = ones(length(ys), 1);
-end
 
 
-weights = yerr.^(-1);
+%Attempt at a better conditioning of the problem:
+xfact = mean(xs);
+yfact = mean(ys);
+xs = xs / xfact;
+ys = ys / yfact;
+yerr = yerr / yfact;
+guessTau1 = guessTau1 / xfact;
+guessTau2 = guessTau2 / xfact;
+guessAmplFrac = guessAmplFrac / yfact;
 
-acceptedError = 1e-10;
-maxIterations = 1000;
 
-
-[fr, p, kvg, iter, corp, covp, covr, stdresid, Z, r2] = leasqr(
-               xs, ys, [guessTau1, guessTau2, guessAmplFrac],
+[fr, p, pErr] = leasqrError(
+               xs, ys, yerr, [guessTau1, guessTau2, guessAmplFrac],
                @(x,p)(    p(3)   * exp(-x/p(1)) ...
-		      + (1-p(3)) * exp(-x/p(2))),
-               acceptedError,
-               maxIterations,
-               weights);
+		      + (1-p(3)) * exp(-x/p(2))));
 
 tau1 = p(1);
 tau2 = p(2);
 amplFrac = p(3);
-disp("This should be +/- diagonal:")
-disp(covp);
-errs = sqrt(diag(covp));
-tau1Stddev = errs(1);
-tau2Stddev = errs(2);
-amplFracStddev = errs(3);
+tau1Stddev = pErr(1);
+tau2Stddev = pErr(2);
+amplFracStddev = pErr(3);
 
 if tau1 < tau2
 	temp = tau1;
@@ -45,3 +41,11 @@ if tau1 < tau2
 	tau2 = temp;
 	amplFrac = 1-amplFrac;
 end
+
+
+
+
+tau1 = tau1 * xfact;
+tau2 = tau2 * xfact;
+tau1Stddev = tau1Stddev * xfact;
+tau2Stddev = tau2Stddev * xfact;

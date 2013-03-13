@@ -3,31 +3,32 @@
 % function [tau, amplitude, tauStddev, amplitudeStddev] = exponentialRelaxationNoOffset(xs, ys, guessTau, guessAmplitude, yerr)
 function [tau, amplitude, tauStddev, amplitudeStddev] = exponentialRelaxationNoOffset(xs, ys, guessTau, guessAmplitude, yerr)
 
-if (nargin < 4)
+if (nargin < 5)
        error("not enough required arguments!");
 end
-if (nargin < 5)
-       yerr = ones(length(ys), 1);
-end
+
+%Attempt at a better conditioning of the problem:
+xfact = mean(xs);
+yfact = mean(ys);
+xs = xs / xfact;
+ys = ys / yfact;
+yerr = yerr / yfact;
+guessTau = guessTau / xfact;
+guessAmplitude = guessAmplitude / yfact;
 
 
-weights = yerr.^(-1);
-
-acceptedError = 1e-10;
-maxIterations = 1000;
-
-[fr, p, kvg, iter, corp, covp, covr, stdresid, Z, r2] = leasqr(
-               xs, ys, [guessTau, guessAmplitude],
-               @(x,p)(p(2)*exp(-x/p(1))),
-               acceptedError,
-               maxIterations,
-               weights);
+[fr, p, pErr] = leasqrError(
+               xs, ys, yerr, [guessTau, guessAmplitude],
+               @(x,p)(p(2)*exp(-x/p(1))));
 
 tau = p(1);
 amplitude = p(2);
-disp("This should be +/- diagonal:")
-disp(covp);
-errs = sqrt(diag(covp));
-tauStddev = errs(1);
-amplitudeStddev = errs(2);
+tauStddev = pErr(1);
+amplitudeStddev = pErr(2);
 
+
+
+tau = tau * xfact;
+amplitude = amplitude * yfact;
+tauStddev = tauStddev * xfact;
+amplitudeStddev = amplitudeStddev * yfact;
