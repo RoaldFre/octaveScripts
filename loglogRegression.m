@@ -1,5 +1,4 @@
 % Performs a linear regression on the 'log-log' of the data.
-% xs must be a column vector
 %
 % function [cte, exponent, cteStddev, exponentStddev] = loglogRegression(xs, ys, guessCte, guessExponent, yerr)
 function [cte, exponent, cteStddev, exponentStddev] = loglogRegression(xs, ys, guessCte, guessExponent, yerr)
@@ -8,6 +7,9 @@ if (nargin < 5)
 	error("Not enough required arguments!");
 end
 
+xs = xs(:);
+ys = ys(:);
+yerr = yerr(:);
 
 logys = log(ys);
 logxs = log(xs);
