@@ -20,8 +20,8 @@ guessAmplitude = guessAmplitude / yfact;
 
 
 [fr, p, pErr] = leasqrError(
-               xs, ys, yerr, [guessTau, guessOffset, guessAmplitude],
-               @(x,p)(p(2) + p(3)*exp(-x/p(1))));
+		xs, ys, yerr, [guessTau, guessOffset, guessAmplitude],
+		@(x,p)(p(2) + p(3)*exp(-x/p(1))));
 
 tau = p(1);
 offset = p(2);
