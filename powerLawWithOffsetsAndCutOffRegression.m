@@ -3,7 +3,7 @@
 % relative error.
 % A regression in log-log space is probably more appropriate for power 
 % laws!
-function [cte, exponent, xOffset, yOffset, cutOff, cutOffWidth, cteErr, exponentErr, xOffsetErr, yOffsetErr, cutOffErr, cutOffWidthErr, f] = powerLawWithOffsetsAndCutOffRegression(xs, ys, yErrs, guessCte, guessExponent, guessCutOff, guessCutOffWidth, guessXoffset, guessYoffset)
+function [exponent, x1, xOffset, yOffset, cutOff, cutOffWidth, exponentErr, x1err, xOffsetErr, yOffsetErr, cutOffErr, cutOffWidthErr, f] = powerLawWithOffsetsAndCutOffRegression(xs, ys, yErrs, guessExponent, guessX1, guessCutOff, guessCutOffWidth, guessXoffset, guessYoffset)
 
 if nargin < 6
 	guessCutOff = max(xs) * 0.8;
@@ -23,7 +23,8 @@ xfact = mean(xs);
 yfact = mean(ys);
 xs = xs / xfact;
 ys = ys / yfact;
-guessCte = guessCte / yfact;
+yErrs = yErrs / yfact;
+guessX1 = guessX1 / xfact;
 guessCutOff = guessCutOff / xfact;
 guessCutOffWidth = guessCutOffWidth / xfact;
 guessXoffset = guessXoffset / xfact;
@@ -31,21 +32,21 @@ guessYoffset = guessYoffset / yfact;
 
 
 [f, p, pErr] = leasqrError(
-		xs, ys, yErrs, [guessCte, guessExponent, guessXoffset, guessYoffset, guessCutOff, guessCutOffWidth],
+		xs, ys, yErrs, [guessExponent, guessX1, guessXoffset, guessYoffset, guessCutOff, guessCutOffWidth],
 		@(x,p)(real(powerLawWithOffsetsAndCutOff(x, p(1), p(2), p(3), p(4), p(5), p(6)))),
 		10);
 
 f = f * yfact;
 
-cte = p(1) * yfact;
-exponent = p(2);
+exponent = p(1);
+x1 = p(2) * xfact / yfact^(1/exponent);
 xOffset = p(3) * xfact;
 yOffset = p(4) * yfact;
 cutOff = p(5) * xfact;
 cutOffWidth = p(6) * xfact;
 
-cteErr = pErr(1) * yfact;
-exponentErr = pErr(2);
+exponentErr = pErr(1);
+x1err = pErr(2) * xfact / yfact^(1/exponent);
 xOffsetErr = pErr(3) * xfact;
 yOffsetErr = pErr(4) * yfact;
 cutOffErr = pErr(5) * xfact;
