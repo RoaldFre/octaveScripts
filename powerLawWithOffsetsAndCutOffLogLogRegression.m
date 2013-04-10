@@ -34,7 +34,7 @@ logysErr = yerr ./ ys;
 		@(x,p)(real(powerLawWithOffsetsAndCutOffLogLog(x, p(1), p(2), p(3), p(4), p(5), p(6)))),
 		10);
 
-f = f + log(yfact);
+f = exp(f) * yfact;
 
 exponent = p(1);
 x1 = p(2) * xfact / yfact^(1/exponent);
