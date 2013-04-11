@@ -1,107 +1,155 @@
 %% Copyright (C) 1992-1994 Richard Shrager
-%% Copyright (C) 1992-1994 Arthur Jutan
-%% Copyright (C) 1992-1994 Ray Muzic
-%% Copyright (C) 2010 Olaf Till <olaf.till@uni-jena.de>
+%% Copyright (C) 1992-1994 Arthur Jutan <jutan@charon.engga.uwo.ca>
+%% Copyright (C) 1992-1994 Ray Muzic <rfm2@ds2.uh.cwru.edu>
+%% Copyright (C) 2010, 2011 Olaf Till <i7tiol@t-online.de>
 %%
-%% This program is free software; you can redistribute it and/or modify
-%% it under the terms of the GNU General Public License as published by
-%% the Free Software Foundation; either version 2 of the License, or
-%% (at your option) any later version.
+%% This program is free software; you can redistribute it and/or modify it under
+%% the terms of the GNU General Public License as published by the Free Software
+%% Foundation; either version 3 of the License, or (at your option) any later
+%% version.
 %%
-%% This program is distributed in the hope that it will be useful,
-%% but WITHOUT ANY WARRANTY; without even the implied warranty of
-%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%% GNU General Public License for more details.
+%% This program is distributed in the hope that it will be useful, but WITHOUT
+%% ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+%% FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+%% details.
 %%
-%% You should have received a copy of the GNU General Public License
-%% along with this program; If not, see <http://www.gnu.org/licenses/>.
+%% You should have received a copy of the GNU General Public License along with
+%% this program; if not, see <http://www.gnu.org/licenses/>.
+
+%%function [f,p,cvg,iter,corp,covp,covr,stdresid,Z,r2]=
+%%                   leasqr(x,y,pin,F,{stol,niter,wt,dp,dFdp,options})
+%%
+%% Levenberg-Marquardt nonlinear regression of f(x,p) to y(x).
+%%
+%% Version 3.beta
+%% Optional parameters are in braces {}.
+%% x = vector or matrix of independent variables.
+%% y = vector or matrix of observed values.
+%% wt = statistical weights (same dimensions as y).  These should be
+%%   set to be proportional to (sqrt of var(y))^-1; (That is, the
+%%   covariance matrix of the data is assumed to be proportional to
+%%   diagonal with diagonal equal to (wt.^2)^-1.  The constant of
+%%   proportionality will be estimated.); default = ones( size (y)).
+%% pin = vec of initial parameters to be adjusted by leasqr.
+%% dp = fractional increment of p for numerical partial derivatives;
+%%   default = .001*ones(size(pin))
+%%   dp(j) > 0 means central differences on j-th parameter p(j).
+%%   dp(j) < 0 means one-sided differences on j-th parameter p(j).
+%%   dp(j) = 0 holds p(j) fixed i.e. leasqr wont change initial guess: pin(j)
+%% F = name of function in quotes or function handle; the function
+%%   shall be of the form y=f(x,p), with y, x, p of the form y, x, pin
+%%   as described above.
+%% dFdp = name of partial derivative function in quotes or function
+%% handle; default is 'dfdp', a slow but general partial derivatives
+%% function; the function shall be of the form
+%% prt=dfdp(x,f,p,dp,F[,bounds]). For backwards compatibility, the
+%% function will only be called with an extra 'bounds' argument if the
+%% 'bounds' option is explicitely specified to leasqr (see dfdp.m).
+%% stol = scalar tolerance on fractional improvement in scalar sum of
+%%   squares = sum((wt.*(y-f))^2); default stol = .0001;
+%% niter = scalar maximum number of iterations; default = 20;
+%% options = structure, currently recognized fields are 'fract_prec',
+%% 'max_fract_change', 'inequc', 'bounds', and 'equc'. For backwards
+%% compatibility, 'options' can also be a matrix whose first and
+%% second column contains the values of 'fract_prec' and
+%% 'max_fract_change', respectively.
+%%   Field 'options.fract_prec': column vector (same length as 'pin')
+%%   of desired fractional precisions in parameter estimates.
+%%   Iterations are terminated if change in parameter vector (chg)
+%%   relative to current parameter estimate is less than their
+%%   corresponding elements in 'options.fract_prec' [ie. all (abs
+%%   (chg) < abs (options.fract_prec .* current_parm_est))] on two
+%%   consecutive iterations, default = zeros().
+%%   Field 'options.max_fract_change': column vector (same length as
+%%   'pin) of maximum fractional step changes in parameter vector.
+%%   Fractional change in elements of parameter vector is constrained to
+%%   be at most 'options.max_fract_change' between sucessive iterations.
+%%   [ie. abs(chg(i))=abs(min([chg(i)
+%%   options.max_fract_change(i)*current param estimate])).], default =
+%%   Inf*ones().
+%%   Field 'options.inequc': cell-array containing up to four entries,
+%%   two entries for linear inequality constraints and/or one or two
+%%   entries for general inequality constraints. Initial parameters
+%%   must satisfy these constraints. Either linear or general
+%%   constraints may be the first entries, but the two entries for
+%%   linear constraints must be adjacent and, if two entries are given
+%%   for general constraints, they also must be adjacent. The two
+%%   entries for linear constraints are a matrix (say m) and a vector
+%%   (say v), specifying linear inequality constraints of the form
+%%   `m.' * parameters + v >= 0'. If the constraints are just bounds,
+%%   it is suggested to specify them in 'options.bounds' instead,
+%%   since then some sanity tests are performed, and since the
+%%   function 'dfdp.m' is guarantied not to violate constraints during
+%%   determination of the numeric gradient only for those constraints
+%%   specified as 'bounds' (possibly with violations due to a certain
+%%   inaccuracy, however, except if no constraints except bounds are
+%%   specified). The first entry for general constraints must be a
+%%   differentiable vector valued function (say h), specifying general
+%%   inequality constraints of the form `h (p[, idx]) >= 0'; p is the
+%%   column vector of optimized paraters and the optional argument idx
+%%   is a logical index. h has to return the values of all constraints
+%%   if idx is not given, and has to return only the indexed
+%%   constraints if idx is given (so computation of the other
+%%   constraints can be spared). If a second entry for general
+%%   constraints is given, it must be a function (say dh) which
+%%   returnes a matrix whos rows contain the gradients of the
+%%   constraint function h with respect to the optimized parameters.
+%%   It has the form jac_h = dh (vh, p, dp, h, idx[, bounds]); p is
+%%   the column vector of optimized parameters, and idx is a logical
+%%   index --- only the rows indexed by idx must be returned (so
+%%   computation of the others can be spared). The other arguments of
+%%   dh are for the case that dh computes numerical gradients: vh is
+%%   the column vector of the current values of the constraint
+%%   function h, with idx already applied. h is a function h (p) to
+%%   compute the values of the constraints for parameters p, it will
+%%   return only the values indexed by idx. dp is a suggestion for
+%%   relative step width, having the same value as the argument 'dp'
+%%   of leasqr above. If bounds were specified to leasqr, they are
+%%   provided in the argument bounds of dh, to enable their
+%%   consideration in determination of numerical gradients. If dh is
+%%   not specified to leasqr, numerical gradients are computed in the
+%%   same way as with 'dfdp.m' (see above). If some constraints are
+%%   linear, they should be specified as linear constraints (or
+%%   bounds, if applicable) for reasons of performance, even if
+%%   general constraints are also specified.
+%%   Field 'options.bounds': two-column-matrix, one row for each
+%%   parameter in 'pin'. Each row contains a minimal and maximal value
+%%   for each parameter. Default: [-Inf, Inf] in each row. If this
+%%   field is used with an existing user-side function for 'dFdp'
+%%   (see above) the functions interface might have to be changed.
+%%   Field 'options.equc': equality constraints, specified the same
+%%   way as inequality constraints (see field 'options.inequc').
+%%   Initial parameters must satisfy these constraints.
+%%   Note that there is possibly a certain inaccuracy in honoring
+%%   constraints, except if only bounds are specified. 
+%%   _Warning_: If constraints (or bounds) are set, returned guesses
+%%   of corp, covp, and Z are generally invalid, even if no constraints
+%%   are active for the final parameters. If equality constraints are
+%%   specified, corp, covp, and Z are not guessed at all.
+%%   Field 'options.cpiv': Function for complementary pivot algorithm
+%%   for inequality constraints, default: cpiv_bard. No different
+%%   function is supplied.
+%%
+%%          OUTPUT VARIABLES
+%% f = column vector of values computed: f = F(x,p).
+%% p = column vector trial or final parameters. i.e, the solution.
+%% cvg = scalar: = 1 if convergence, = 0 otherwise.
+%% iter = scalar number of iterations used.
+%% corp = correlation matrix for parameters.
+%% covp = covariance matrix of the parameters.
+%% covr = diag(covariance matrix of the residuals).
+%% stdresid = standardized residuals.
+%% Z = matrix that defines confidence region (see comments in the source).
+%% r2 = coefficient of multiple determination, intercept form.
+%%
+%% Not suitable for non-real residuals.
+%%
+%% References:
+%% Bard, Nonlinear Parameter Estimation, Academic Press, 1974.
+%% Draper and Smith, Applied Regression Analysis, John Wiley and Sons, 1981.
 
 function [f,p,cvg,iter,corp,covp,covr,stdresid,Z,r2]= ...
       leasqr(x,y,pin,F,stol,niter,wt,dp,dFdp,options)
-
-  %%function [f,p,cvg,iter,corp,covp,covr,stdresid,Z,r2]=
-  %%                   leasqr(x,y,pin,F,{stol,niter,wt,dp,dFdp,options})
-  %%
-  %% Levenberg-Marquardt nonlinear regression of f(x,p) to y(x).
-  %%
-  %% Version 3.beta
-  %% Optional parameters are in braces {}.
-  %% x = vector or matrix of independent variables, 1 entry or row per
-  %%   observation.
-  %% y = vector of observed values, same length as x or as number of
-  %%   rows of x.
-  %% wt = vector (dim=length(y)) of statistical weights.  These should
-  %%   be set to be proportional to (sqrt of var(y))^-1; (That is, the
-  %%   covariance matrix of the data is assumed to be proportional to
-  %%   diagonal with diagonal equal to (wt.^2)^-1.  The constant of
-  %%   proportionality will be estimated.); default = ones(length(y),1).
-  %% pin = vec of initial parameters to be adjusted by leasqr.
-  %% dp = fractional increment of p for numerical partial derivatives;
-  %%   default = .001*ones(size(pin))
-  %%   dp(j) > 0 means central differences on j-th parameter p(j).
-  %%   dp(j) < 0 means one-sided differences on j-th parameter p(j).
-  %%   dp(j) = 0 holds p(j) fixed i.e. leasqr wont change initial guess: pin(j)
-  %% F = name of function in quotes or function handle; the function
-  %%   shall be of the form y=f(x,p), with y, x, p of the form y, x, pin
-  %%   as described above; the returned y must be a column vector.
-  %% dFdp = name of partial derivative function in quotes; default is 'dfdp', a
-  %%   slow but general partial derivatives function; the function shall be
-  %%   of the form prt=dfdp(x,f,p,dp,F[,bounds]). For backwards
-  %%   compatibility, the function will only be called with an extra
-  %%   'bounds' argument if the 'bounds' option is explicitely specified
-  %%   to leasqr (see dfdp.m).
-  %% stol = scalar tolerance on fractional improvement in scalar sum of
-  %%   squares = sum((wt.*(y-f))^2); default stol = .0001;
-  %% niter = scalar maximum number of iterations; default = 20;
-  %% options = structure, currently recognized fields are 'fract_prec',
-  %%   'max_fract_change', 'inequc', and 'bounds'. For backwards compatibility,
-  %%   'options' can also be a matrix whose first and second column
-  %%   contains the values of 'fract_prec' and 'max_fract_change',
-  %%   respectively.
-  %%   Field 'options.fract_prec': column vector (same length as 'pin') of
-  %%   desired fractional precisions in parameter estimates. Iterations
-  %%   are terminated if change in parameter vector (chg) on two
-  %%   consecutive iterations is less than their corresponding elements in
-  %%   'options.fract_prec'.  [ie. all(abs(chg*current parm est) <
-  %%   options.fract_prec) on two consecutive iterations.], default =
-  %%   zeros().
-  %%   Field 'options.max_fract_change': column vector (same length as
-  %%   'pin) of maximum fractional step changes in parameter vector.
-  %%   Fractional change in elements of parameter vector is constrained to
-  %%   be at most 'options.max_fract_change' between sucessive iterations.
-  %%   [ie. abs(chg(i))=abs(min([chg(i)
-  %%   options.max_fract_change(i)*current param estimate])).], default =
-  %%   Inf*ones().
-  %%   Field 'options.inequc': cell-array containing a matrix (say m)
-  %%   and a column vector (say v), specifying linear inequality
-  %%   constraints of the form `m.' * parameters + v >= 0'. If the
-  %%   constraints are just bounds, it is suggested to specify them in
-  %%   'options.bounds' instead, since then some sanity tests are
-  %%   performed, and since the function 'dfdp.m' is guarantied not to
-  %%   violate constraints during determination of the numeric gradient
-  %%   only for those constraints specified as 'bounds'.
-  %%   Field 'options.bounds': two-column-matrix, one row for each
-  %%   parameter in 'pin'. Each row contains a minimal and maximal value
-  %%   for each parameter. Default: [-Inf, Inf] in each row. If this
-  %%   field is used with an existing user-side function for 'dFdp'
-  %%   (see above) the functions interface might have to be changed.
-  %%   _Warning_: If constraints (or bounds) are set, returned guesses
-  %%   of corp, covp, and Z are generally invalid, even if no constraints
-  %%   are active for the final parameters.
-  %%
-  %%          OUTPUT VARIABLES
-  %% f = column vector of values computed: f = F(x,p).
-  %% p = column vector trial or final parameters. i.e, the solution.
-  %% cvg = scalar: = 1 if convergence, = 0 otherwise.
-  %% iter = scalar number of iterations used.
-  %% corp = correlation matrix for parameters.
-  %% covp = covariance matrix of the parameters.
-  %% covr = diag(covariance matrix of the residuals).
-  %% stdresid = standardized residuals.
-  %% Z = matrix that defines confidence region (see comments in the source).
-  %% r2 = coefficient of multiple determination, intercept form.
-  %%
-  %% Not suitable for non-real residuals.
 
   %% The following two blocks of comments are chiefly from the original
   %% version for Matlab. For later changes the logs of the Octave Forge
@@ -158,58 +206,83 @@ function [f,p,cvg,iter,corp,covp,covr,stdresid,Z,r2]= ...
   %%       8) Change to more efficent algorithm of Bard for selecting epsL.
   %%       9) Tighten up memory usage by making use of sparse matrices (if 
   %%          MATLAB version >= 4.0) in computation of covp, corp, stdresid.
-  %% Modified by Francesco Potortì
+  %% Modified by Francesco PotortÃ¬
   %%       for use in Octave
   %% Added linear inequality constraints with quadratic programming to
-  %% this file and special case bounds to this file and to dfdp.m, Olaf
-  %% Till 24-Feb-2010
-  %%
-  %% References:
-  %% Bard, Nonlinear Parameter Estimation, Academic Press, 1974.
-  %% Draper and Smith, Applied Regression Analysis, John Wiley and Sons, 1981.
+  %% this file and special case bounds to this file and to dfdp.m
+  %% (24-Feb-2010) and later also general inequality constraints
+  %% (12-Apr-2010) (Reference: Bard, Y., 'An eclectic approach to
+  %% nonlinear programming', Proc. ANU Sem. Optimization, Canberra,
+  %% Austral. Nat. Univ.). Differences from the reference: adaption to
+  %% svd-based algorithm, linesearch or stepwidth adaptions to ensure
+  %% decrease in objective function omitted to rather start a new
+  %% overall cycle with a new epsL, some performance gains from linear
+  %% constraints even if general constraints are specified. Equality
+  %% constraints also implemented. Olaf Till
+  %% Now split into files leasqr.m and __lm_svd__.m.
+
+  %% needed for some anonymous functions
+  if (exist ('ifelse') ~= 5)
+    ifelse = @ scalar_ifelse;
+  end
+
+  __plot_cmds__ (); % flag persistent variables invalid
+
+  global verbose;
 
   %% argument processing
   %%
 
-  %%if (sscanf(version,'%f') >= 4),
-  vernum= sscanf(version,'%f');
-  if (vernum(1) >= 4)
-    global verbose
-    plotcmd='plot(x(:,1),y,''+'',x(:,1),f); figure(gcf)';
-  else
-    plotcmd='plot(x(:,1),y,''+'',x(:,1),f); shg';
+  if (nargin > 8)
+    if (ischar (dFdp))
+      dfdp = str2func (dFdp);
+    else
+      dfdp = dFdp;
+    end
   end
-  if (exist('OCTAVE_VERSION'))
-    global verbose
-    plotcmd='plot(x(:,1),y,''+;data;'',x(:,1),f,'';fit;'');';
-  end
-
-  if(exist('verbose')~=1) %If verbose undefined, print nothing
-    verbose=0;       %This will not tell them the results
-  end
-
-  if (nargin <= 8) dFdp='dfdp'; end
+  
   if (nargin <= 7) dp=.001*(pin*0+1); end %DT
-  if (nargin <= 6) wt=ones(length(y),1); end	% SMB modification
-  if (nargin <= 5) niter=20; end
+  if (nargin <= 6) wt = ones (size (y)); end	% SMB modification
+  if (nargin <= 5) niter = []; end
   if (nargin == 4) stol=.0001; end
+  if (ischar (F)) F = str2func (F); end
   %%
 
-  y=y(:); wt=wt(:); pin=pin(:); dp=dp(:); %change all vectors to columns
-  if (isvector (x)) x = x(:); end
-  %% check data vectors- same length?
-  m=length(y); n=length(pin);
-  if (size (x, 1) ~= m) 
-    error('input(x)/output(y) data must have same length ')
+  if (any (size (y) ~= size (wt)))
+    error ('dimensions of observations and weights do not match');
   end
+  wtl = wt(:);
+  pin=pin(:); dp=dp(:); %change all vectors to columns
+  [rows_y, cols_y] = size (y);
+  m = rows_y * cols_y; n=length(pin);
+  f_pin = F (x, pin);
+  if (any (size (f_pin) ~= size (y)))
+    error ('dimensions of returned values of model function and of observations do not match');
+  end
+  f_pin = y - f_pin;
+
+  dFdp = @ (p, dfdp_hook) - dfdp (x, y(:) - dfdp_hook.f, p, dp, F);
 
   %% processing of 'options'
   pprec = zeros (n, 1);
   maxstep = Inf * ones (n, 1);
+  have_gencstr = false; % no general constraints
+  have_genecstr = false; % no general equality constraints
+  n_gencstr = 0;
   mc = zeros (n, 0);
-  vc = zeros (0, 1);
+  vc = zeros (0, 1); rv = 0;
+  emc = zeros (n, 0);
+  evc = zeros (0, 1); erv = 0;
   bounds = cat (2, -Inf * ones (n, 1), Inf * ones (n, 1));
-  dfdp_cmd = 'feval(dFdp,x,fbest,p,dp,F);'; % will possibly be redefined
+  pin_cstr.inequ.lin_except_bounds = [];;
+  pin_cstr.inequ.gen = [];;
+  pin_cstr.equ.lin = [];;
+  pin_cstr.equ.gen = [];;
+  dfdp_bounds = {};
+  cpiv = @ cpiv_bard;
+  eq_idx = []; % numerical index for equality constraints in all
+				% constraints, later converted to
+				% logical index
   if (nargin > 9)
     if (ismatrix (options)) % backwards compatibility
       tp = options;
@@ -218,230 +291,309 @@ function [f,p,cvg,iter,corp,covp,covr,stdresid,Z,r2]= ...
 	options.max_fract_change = tp(:, 2);
       end
     end
+    if (isfield (options, 'cpiv') && ~isempty (options.cpiv))
+      %% As yet there is only one cpiv function distributed with leasqr,
+      %% but this may change; the algorithm of cpiv_bard is said to be
+      %% relatively fast, but may have disadvantages.
+      if (ischar (options.cpiv))
+	cpiv = str2func (options.cpiv);
+      else
+	cpiv = options.cpiv;
+      end
+    end
     if (isfield (options, 'fract_prec'))
       pprec = options.fract_prec;
-      if (rows (pprec) ~= n || columns (pprec) ~= 1)
+      if (any (size (pprec) ~= [n, 1]))
 	error ('fractional precisions: wrong dimensions');
       end
     end
     if (isfield (options, 'max_fract_change'))
       maxstep = options.max_fract_change;
-      if (rows (maxstep) ~= n || columns (maxstep) ~= 1)
+      if (any (size (maxstep) ~= [n, 1]))
 	error ('maximum fractional step changes: wrong dimensions');
       end
     end
     if (isfield (options, 'inequc'))
-      mc = options.inequc{1};
-      vc = options.inequc{2};
+      inequc = options.inequc;
+      if (ismatrix (inequc{1}))
+	mc = inequc{1};
+	vc = inequc{2};
+	if (length (inequc) > 2)
+	  have_gencstr = true;
+	  f_gencstr = inequc{3};
+	  if (length (inequc) > 3)
+	    df_gencstr = inequc{4};
+	  else
+	    df_gencstr = @ dcdp;
+	  end
+	end
+      else
+	lid = 0; % no linear constraints
+	have_gencstr = true;
+	f_gencstr = inequc{1};
+	if (length (inequc) > 1)
+	  if (ismatrix (inequc{2}))
+	    lid = 2;
+	    df_gencstr = @ dcdp;
+	  else
+	    df_gencstr = inequc{2};
+	    if (length (inequc) > 2)
+	      lid = 3;
+	    end
+	  end
+	else
+	  df_gencstr = @ dcdp;
+	end
+	if (lid)
+	  mc = inequc{lid};
+	  vc = inequc{lid + 1};
+	end
+      end
+      if (have_gencstr)
+	if (ischar (f_gencstr))
+	  f_gencstr = str2func (f_gencstr);
+	end
+	tp = f_gencstr (pin);
+	n_gencstr = length (tp);
+ 	f_gencstr = @ (p, idx) tf_gencstr (p, idx, f_gencstr);
+	if (ischar (df_gencstr))
+	  df_gencstr = str2func (df_gencstr);
+	end
+	if (strcmp (func2str (df_gencstr), 'dcdp'))
+	  df_gencstr = @ (f, p, dp, idx, db) ...
+	      df_gencstr (f(idx), p, dp, ...
+			  @ (tp) f_gencstr (tp, idx), db{:});
+	else
+	  df_gencstr = @ (f, p, dp, idx, db) ...
+	      df_gencstr (f(idx), p, dp, ...
+			  @ (tp) f_gencstr (tp, idx), idx, db{:});
+	end
+      end
       [rm, cm] = size (mc);
       [rv, cv] = size (vc);
       if (rm ~= n || cm ~= rv || cv ~= 1)
-	error ('inequality constraints: wrong dimensions');
+	error ('linear inequality constraints: wrong dimensions');
       end
-      if (any (mc.' * pin + vc < 0))
-	error ('initial parameters violate inequality constraints');
+      pin_cstr.inequ.lin_except_bounds = mc.' * pin + vc;
+      if (have_gencstr)
+	pin_cstr.inequ.gen = tp;
+      end
+    end
+    if (isfield (options, 'equc'))
+      equc = options.equc;
+      if (ismatrix (equc{1}))
+	emc = equc{1};
+	evc = equc{2};
+	if (length (equc) > 2)
+	  have_genecstr = true;
+	  f_genecstr = equc{3};
+	  if (length (equc) > 3)
+	    df_genecstr = equc{4};
+	  else
+	    df_genecstr = @ dcdp;
+	  end
+	end
+      else
+	lid = 0; % no linear constraints
+	have_genecstr = true;
+	f_genecstr = equc{1};
+	if (length (equc) > 1)
+	  if (ismatrix (equc{2}))
+	    lid = 2;
+	    df_genecstr = @ dcdp;
+	  else
+	    df_genecstr = equc{2};
+	    if (length (equc) > 2)
+	      lid = 3;
+	    end
+	  end
+	else
+	  df_genecstr = @ dcdp;
+	end
+	if (lid)
+	  emc = equc{lid};
+	  evc = equc{lid + 1};
+	end
+      end
+      if (have_genecstr)
+	if (ischar (f_genecstr))
+	  f_genecstr = str2func (f_genecstr);
+	end
+	tp = f_genecstr (pin);
+	n_genecstr = length (tp);
+	f_genecstr = @ (p, idx) tf_gencstr (p, idx, f_genecstr);
+	if (ischar (df_genecstr))
+	  df_genecstr = str2func (df_genecstr);
+	end
+	if (strcmp (func2str (df_genecstr), 'dcdp'))
+	  df_genecstr = @ (f, p, dp, idx, db) ...
+	      df_genecstr (f, p, dp, ...
+			   @ (tp) f_genecstr (tp, idx), db{:});
+	else
+	  df_genecstr = @ (f, p, dp, idx, db) ...
+	      df_genecstr (f, p, dp, ...
+			   @ (tp) f_genecstr (tp, idx), idx, db{:});
+	end
+      end
+      [erm, ecm] = size (emc);
+      [erv, ecv] = size (evc);
+      if (erm ~= n || ecm ~= erv || ecv ~= 1)
+	error ('linear equality constraints: wrong dimensions');
+      end
+      pin_cstr.equ.lin = emc.' * pin + evc;
+      if (have_genecstr)
+	pin_cstr.equ.gen = tp;
       end
     end
     if (isfield (options, 'bounds'))
-      dfdp_cmd = 'feval(dFdp,x,fbest,p,dp,F,bounds);';
       bounds = options.bounds;
-      if (rows (bounds) ~= n || columns (bounds) ~= 2)
+      if (any (size (bounds) ~= [n, 2]))
 	error ('bounds: wrong dimensions');
       end
       idx = bounds(:, 1) > bounds(:, 2);
       tp = bounds(idx, 2);
       bounds(idx, 2) = bounds(idx, 1);
       bounds(idx, 1) = tp;
+      %% It is possible to take this decision here, since this frontend
+      %% is used only with one certain backend. The backend will check
+      %% this again; but it will not reference 'dp' in its message,
+      %% thats why the additional check here.
       idx = bounds(:, 1) == bounds(:, 2);
       if (any (idx))
-	warning ('lower and upper bounds identical for some parameters, setting the respective elements of dp to zero');
+	warning ('leasqr:constraints', 'lower and upper bounds identical for some parameters, setting the respective elements of dp to zero');
 	dp(idx) = 0;
       end
-      idx = pin < bounds(:, 1);
-      if (any (idx))
-	warning ('some initial parameters set to lower bound');
-	pin(idx) = bounds(idx, 1);
-      end
-      idx = pin > bounds(:, 2);
-      if (any (idx))
-	warning ('some initial parameters set to upper bound');
-	pin(idx) = bounds(idx, 2);
-      end
+      %%
       tp = eye (n);
-      lidx = ~ isinf (bounds(:, 1));
-      uidx = ~ isinf (bounds(:, 2));
+      lidx = ~isinf (bounds(:, 1));
+      uidx = ~isinf (bounds(:, 2));
       mc = cat (2, mc, tp(:, lidx), - tp(:, uidx));
       vc = cat (1, vc, - bounds(lidx, 1), bounds(uidx, 2));
+      [rm, cm] = size (mc);
+      [rv, cv] = size (vc);
+      dfdp_bounds = {bounds};
+      dFdp = @ (p, dfdp_hook) - dfdp (x, y(:) - dfdp_hook.f, p, dp, ...
+				      F, bounds);
     end
-  end
-
-  if (all (dp == 0))
-    error ('no free parameters');
-  end
-
-  %% set up for iterations
-  %%
-  p = pin;
-  f=feval(F,x,p); fbest=f; pbest=p;
-  r=wt.*(y-f);
-  if (~isreal (r)) error ('weighted residuals are not real'); end
-  ss = r.' * r;
-  sbest=ss;
-  chgprev=Inf*ones(n,1);
-  cvg=0;
-  epsLlast=1;
-  epstab=[.1, 1, 1e2, 1e4, 1e6];
-
-  %% for testing
-  %% new_s = false;
-  %% if (isfield (options, 'new_s'))
-  %%   new_s = options.new_s;
-  %% end
-
-  nz = eps; % This is arbitrary. Constraint fuction will be regarded as
-				% <= zero if less than nz.
-  %% do iterations
-  %%
-  for iter=1:niter
-    c_act = mc.' * p + vc < nz; % index of active constraints
-    mca = mc(:, c_act);
-    vca = vc(c_act);
-    mcat = mca.';
-    nrm = zeros (1, n);
-    pprev=pbest;
-    prt = eval (dfdp_cmd);
-    r=wt.*(y-fbest);
-    if (~isreal (r)) error ('weighted residuals are not real'); end
-    sprev=sbest;
-    sgoal=(1-stol)*sprev;
-    msk = dp ~= 0;
-    prt(:, msk) = prt(:, msk) .* wt(:, ones (1, sum (msk)));
-    nrm(msk) = sumsq (prt(:, msk), 1);
-    msk = nrm > 0;
-    nrm(msk) = 1 ./ sqrt (nrm(msk));
-    prt = prt .* nrm(ones (1, m), :);
-    nrm = nrm.';
-    [prt,s,v]=svd(prt,0);
-    s=diag(s);
-    g = prt.' * r;
-    for jjj=1:length(epstab)
-      epsL = max(epsLlast*epstab(jjj),1e-7);
-      %% printf ('epsL: %e\n', epsL); % for testing
-
-      %% Usage of this 'ser' later is equivalent to pre-multiplying the
-      %% gradient with a positive-definit matrix, but not with a
-      %% diagonal matrix, at epsL -> Inf; so there is a fallback to
-      %% gradient descent, but not in general to descent for each
-      %% gradient component. Using the commented-out 'ser' ((1 / (1 +
-      %% epsL^2)) * (1 ./ se + epsL * s)) would be equivalent to using
-      %% Marquardts diagonal of the Hessian-approximation for epsL ->
-      %% Inf, but currently this gives no advantages in tests, even with
-      %% constraints.
-      ser = 1 ./ sqrt((s.*s)+epsL);
-      %% se=sqrt((s.*s)+epsL);
-      %%if (new_s)
-      %% %% for testing
-      %% ser = (1 / (1 + epsL^2)) * (1 ./ se + epsL * s);
-      %% else
-      %% ser = 1 ./ se;
-      %% end
-      tp1 = (v * (g .* ser)) .* nrm;
-      if (any (c_act))
-	%% calculate chg by 'quadratic programming'
-	idx = ones (1, size (mca, 2));
-	nrme = nrm(:, idx);
-	ser2 = ser .* ser;
-	tp2 = nrme .* (v * (ser2(:, idx) .* (v.' * (nrme .* mca))));
-	[lb, idx] = cpiv (mcat * tp1, mcat * tp2);
-	chg = tp1 + tp2(:, idx) * lb;
-	%% collect inactive constraints
-	mcit = mc(:, ~ c_act).';
-	vci = vc(~ c_act);
+    %% concatenate inequality and equality constraint functions, mc, and
+    %% vc; update eq_idx, rv, n_gencstr, have_gencstr
+    if (erv > 0)
+      mc = cat (2, mc, emc);
+      vc = cat (1, vc, evc);
+      eq_idx = rv + 1 : rv + erv;
+      rv = rv + erv;
+    end
+    if (have_genecstr)
+      eq_idx = cat (2, eq_idx, ...
+		    rv + n_gencstr + 1 : rv + n_gencstr + n_genecstr);
+      nidxi = 1 : n_gencstr;
+      nidxe = n_gencstr + 1 : n_gencstr + n_genecstr;
+      n_gencstr = n_gencstr + n_genecstr;
+      if (have_gencstr)
+	f_gencstr = @ (p, idx) cat (1, ...
+				    f_gencstr (p, idx(nidxi)), ...
+				    f_genecstr (p, idx(nidxe)));
+	df_gencstr = @ (f, p, dp, idx, db) ...
+	    cat (1, ...
+		 df_gencstr (f(nidxi), p, dp, idx(nidxi), db), ...
+		 df_genecstr (f(nidxe), p, dp, idx(nidxe), db));
       else
-	%% chg is the Levenberg/Marquardt step
-	chg = tp1;
-	%% inactive constraints consist of all constraints
-	mcit = mc.';
-	vci = vc;
+	f_gencstr = f_genecstr;
+	df_gencstr = df_genecstr;
+	have_gencstr = true;
       end
-      %% apply inactive constraints (since this is a Levenberg/Marquardt
-      %% algorithm, no line-search is performed here)
-      hstep = mcit * chg;
-      idx = hstep < 0;
-      if (any (idx))
-	k = min (1, min (- (vci(idx) + mcit(idx, :) * pprev) ./ ...
-			 hstep(idx)));
-	chg = k * chg;
-      end
-      %% check the maximal stepwidth and apply as necessary
-      ochg=chg;
-      idx = ~isinf(maxstep);
-      limit = abs(maxstep(idx).*pprev(idx));
-      chg(idx) = min(max(chg(idx),-limit),limit);
-      if (verbose && any(ochg ~= chg))
-	disp(['Change in parameter(s): ', ...
-              sprintf('%d ',find(ochg ~= chg)), 'maximal fractional stepwidth enforced']);
-      end
-      aprec=abs(pprec.*pbest);       %---
-      %% ss=scalar sum of squares=sum((wt.*(y-f))^2).
-      if (any(abs(chg) > 0.1*aprec))%---  % only worth evaluating
-				% function if there is some non-miniscule
-				% change
-	p=chg+pprev;
-	f=feval(F,x,p);
-	r=wt.*(y-f);
-	if (~isreal (r))
-	  error ('weighted residuals are not real');
-	end
-	ss = r.' * r;
-	if (ss<sbest)
-          pbest=p;
-          fbest=f;
-          sbest=ss;
-	end
-	if (ss<=sgoal)
-          break;
-	end
-      end                          %---
     end
-    %% printf ('epsL no.: %i\n', jjj); % for testing
-    epsLlast = epsL;
-    if (verbose)
-      eval(plotcmd);
+  end
+  if (have_gencstr)
+    nidxl = 1:rv;
+    nidxh = rv+1:rv+n_gencstr;
+    f_cstr = @ (p, idx) ...
+	cat (1, mc(:, idx(nidxl)).' * p + vc(idx(nidxl), 1), ...
+	     f_gencstr (p, idx(nidxh)));
+    %% in the case of this interface, diffp is already zero at fixed;
+    %% also in this special case, dfdp_bounds can be filled in directly
+    %% --- otherwise it would be a field of hook in the called function
+    df_cstr = @ (p, idx, dfdp_hook) ...
+	cat (1, mc(:, idx(nidxl)).', ...
+	     df_gencstr (dfdp_hook.f(nidxh), p, dp, ...
+			 idx(nidxh), ...
+			 dfdp_bounds));
+  else
+    f_cstr = @ (p, idx) mc(:, idx).' * p + vc(idx, 1);
+    df_cstr = @ (p, idx, dfdp_hook) mc(:, idx).';
+  end
+
+
+
+  %% in a general interface, check for all(fixed) here
+
+  %% passed constraints
+  hook.mc = mc; % matrix of linear constraints
+  hook.vc = vc; % vector of linear constraints
+  hook.f_cstr = f_cstr; % function of all constraints
+  hook.df_cstr = df_cstr; % function of derivatives of all constraints
+  hook.n_gencstr = n_gencstr; % number of non-linear constraints
+  hook.eq_idx = false (size (vc, 1) + n_gencstr, 1);
+  hook.eq_idx(eq_idx) = true; % logical index of equality constraints in
+				% all constraints
+  hook.lbound = bounds(:, 1); % bounds, subset of linear inequality
+				% constraints in mc and vc
+  hook.ubound = bounds(:, 2);
+
+  %% passed values of constraints for initial parameters
+  hook.pin_cstr = pin_cstr;
+
+  %% passed derivative of model function
+  hook.dfdp = dFdp;
+
+  %% passed function for complementary pivoting
+  hook.cpiv = cpiv;
+
+  %% passed value of residual function for initial parameters
+  hook.f_pin = f_pin;
+
+  %% passed options
+  hook.max_fract_change = maxstep;
+  hook.fract_prec = pprec;
+  hook.TolFun = stol;
+  hook.MaxIter = niter;
+  hook.weights = wt;
+  hook.fixed = dp == 0;
+  if (verbose)
+    hook.Display = 'iter';
+    __plot_cmds__ = @ __plot_cmds__; # for bug #31484 (Octave <= 3.2.4)
+    hook.plot_cmd = @ (f) __plot_cmds__ (x, y, y - f);
+  else
+    hook.Display = 'off';
+  end
+
+  %% only preliminary, for testing
+  hook.testing = false;
+  hook.new_s = false;
+  if (nargin > 9)
+    if (isfield (options, 'testing'))
+      hook.testing = options.testing;
     end
-    if (ss<eps)
-      break;
-    end
-    aprec=abs(pprec.*pbest);
-    %% [aprec, chg, chgprev]
-    if (all(abs(chg) < aprec) && all(abs(chgprev) < aprec))
-      cvg=1;
-      if (verbose)
-	fprintf('Parameter changes converged to specified precision\n');
-      end
-      break;
-    else
-      chgprev=chg;
-    end
-    if (ss>sgoal)
-      break;
+    if (isfield (options, 'new_s'))
+      hook.new_s = options.new_s;
     end
   end
 
-  %% set return values
-  %%
-  p=pbest;
-  f=fbest;
-  ss=sbest;
-  cvg=((sbest>sgoal)|(sbest<=eps)|cvg);
-  if (cvg ~= 1) disp(' CONVERGENCE NOT ACHIEVED! '); end
+  [p, resid, cvg, outp] = __lm_svd__ (@ (p) y - F (x, p), pin, hook);
+  f = y - resid;
+  iter = outp.niter;
+  cvg = cvg > 0;
+
+  if (~cvg) disp(' CONVERGENCE NOT ACHIEVED! '); end
 
   if (~(verbose || nargout > 4)) return; end
 
+  yl = y(:);
+  f = f(:);
   %% CALC VARIANCE COV MATRIX AND CORRELATION MATRIX OF PARAMETERS
   %% re-evaluate the Jacobian at optimal values
-  jac = eval (dfdp_cmd);
-  msk = dp ~= 0;
+  jac = dFdp (p, struct ('f', f));
+  msk = ~hook.fixed;
   n = sum(msk);           % reduce n to equal number of estimated parameters
   jac = jac(:, msk);	% use only fitted parameters
 
@@ -450,7 +602,7 @@ function [f,p,cvg,iter,corp,covp,covr,stdresid,Z,r2]= ...
   %% diag(1/wt.^2).  
   %% cov matrix of data est. from Bard Eq. 7-5-13, and Row 1 Table 5.1 
 
-  tp = wt.^2;
+  tp = wtl.^2;
   if (exist('sparse'))  % save memory
     Q = sparse (1:m, 1:m, 1 ./ tp);
     Qinv = sparse (1:m, 1:m, tp);
@@ -458,15 +610,15 @@ function [f,p,cvg,iter,corp,covp,covr,stdresid,Z,r2]= ...
     Q = diag (ones (m, 1) ./ tp);
     Qinv = diag (tp);
   end
-  resid=y-f;                                    %un-weighted residuals
-  if (~isreal (r)) error ('residuals are not real'); end
+  resid = resid(:); % un-weighted residuals
+  if (~isreal (resid)) error ('residuals are not real'); end
   tp = resid.' * Qinv * resid;
   covr = (tp / m) * Q;    %covariance of residuals
 
   %% Matlab compatibility and avoiding recomputation make the following
   %% logic clumsy.
   compute = 1;
-  if (m <= n)
+  if (m <= n || any (eq_idx))
     compute = 0;
   else
     Qinv = ((m - n) / tp) * Qinv;
@@ -474,15 +626,7 @@ function [f,p,cvg,iter,corp,covp,covr,stdresid,Z,r2]= ...
     %% parantheses contain inverse of guessed covariance matrix of data
     covpinv = jac.' * Qinv * jac;
     if (exist ('rcond') && rcond (covpinv) <= eps)
-      disp("WARNING: covariance estimates are probably wrong! rcond(covpinv) <= eps!:")
-      disp("covpinv:")
-      disp(covpinv)
-      disp("rcond(covpinv):")
-      disp(rcond(covpinv))
-      disp("eps:")
-      disp(eps)
-      %compute = 0;
-      %XXX OWN MODIFICATION: GET OUTPUT NOTETHELESS!
+      compute = 0;
     elseif (rank (covpinv) < n)
       %% above test is not equivalent to 'rcond' and may unnecessarily
       %% reject some matrices
@@ -504,12 +648,14 @@ function [f,p,cvg,iter,corp,covp,covr,stdresid,Z,r2]= ...
     covr=diag(covr);                 % convert returned values to
 				% compact storage
   end
-  stdresid = resid .* abs (wt) / sqrt (tp / m); % equivalent to resid ./
+  covr = reshape (covr, rows_y, cols_y);
+  stdresid = resid .* abs (wtl) / sqrt (tp / m); % equivalent to resid ./
 				% sqrt (covr)
+  stdresid = reshape (stdresid, rows_y, cols_y);
 
   if (~(verbose || nargout > 8)) return; end
 
-  if (m > n)
+  if (m > n && ~any (eq_idx))
     Z = ((m - n) / (n * resid.' * Qinv * resid)) * covpinv;
   else
     Z = NA * ones (n);
@@ -523,7 +669,7 @@ function [f,p,cvg,iter,corp,covp,covr,stdresid,Z,r2]= ...
 
   %%Calculate R^2, intercept form
   %%
-  tp = sumsq (y - mean (y));
+  tp = sumsq (yl - mean (yl));
   if (tp > 0)
     r2 = 1 - sumsq (resid) / tp;
   else
@@ -533,7 +679,7 @@ function [f,p,cvg,iter,corp,covp,covr,stdresid,Z,r2]= ...
   %% if someone has asked for it, let them have it
   %%
   if (verbose)
-    eval(plotcmd);
+    __plot_cmds__ (x, y, f);
     disp(' Least Squares Estimates of Parameters')
     disp(p.')
     disp(' Correlation matrix of parameters estimated')
@@ -542,7 +688,7 @@ function [f,p,cvg,iter,corp,covp,covr,stdresid,Z,r2]= ...
     disp(covr)
     disp(' Correlation Coefficient R^2')
     disp(r2)
-    sprintf(' 95%% conf region: F(0.05)(%.0f,%.0f)>= delta_pvec.''*Z*delta_pvec',n,m-n)
+    fprintf(' 95%% conf region: F(0.05)(%.0f,%.0f)>= delta_pvec.%s*Z*delta_pvec\n', n, m - n, char (39)); % works with ' and '
     Z
     %% runs test according to Bard. p 201.
     n1 = sum (resid > 0);
@@ -559,6 +705,27 @@ function [f,p,cvg,iter,corp,covp,covr,stdresid,Z,r2]= ...
         disp([num2str(prob),'% chance of greater than ',num2str(nrun),' runs.']);
       end
     end
+  end
+
+function ret = tf_gencstr (p, idx, f)
+
+  %% necessary since user function f_gencstr might return [] or a row
+  %% vector
+
+  ret = f (p, idx);
+  if (isempty (ret))
+    ret = zeros (0, 1);
+  elseif (size (ret, 2) > 1)
+    ret = ret(:);
+  end
+
+function fval = scalar_ifelse (cond, tval, fval)
+
+  %% needed for some anonymous functions, builtin ifelse only available
+  %% in Octave > 3.2; we need only the scalar case here
+
+  if (cond)
+    fval = tval;
   end
 
 %!demo
@@ -616,7 +783,7 @@ function [f,p,cvg,iter,corp,covp,covr,stdresid,Z,r2]= ...
 %!  %% other configuration (default values):
 %!  tolerance = .0001;
 %!  max_iterations = 20;
-%!  weights = ones (5, 1);
+%!  weights = ones (1, 5);
 %!  dp = [.001; .001]; % bidirectional numeric gradient stepsize
 %!  dFdp = 'dfdp'; % function for gradient (numerical)
 %!
