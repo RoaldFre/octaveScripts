@@ -3,7 +3,7 @@
 % relative error.
 % A regression in log-log space is probably more appropriate for power 
 % laws!
-function [exp1, x1, exp2, x2, xOffset, yOffset, cutOff, cutOffWidth, exp1err, x1err, exp2err, x2err, xOffsetErr, yOffsetErr, cutOffErr, cutOffWidthErr, f] = powerLaw2WithOffsetsAndCutOffRegression(xs, ys, yErrs, guessExp1, guessX1, guessExp2, guessX2, guessCutOff, guessCutOffWidth, guessXoffset, guessYoffset)
+function [exp1, x1, exp2, x2, xOffset, yOffset, cutOff, cutOffWidth, exp1err, x1err, exp2err, x2err, xOffsetErr, yOffsetErr, cutOffErr, cutOffWidthErr, f] = pl2OffsetCutoffFit(xs, ys, yErrs, guessExp1, guessX1, guessExp2, guessX2, guessCutOff, guessCutOffWidth, guessXoffset, guessYoffset)
 
 if nargin < 8
 	guessCutOff = max(xs) * 0.8;
@@ -34,7 +34,7 @@ guessYoffset = guessYoffset / yfact;
 
 [f, p, pErr] = leasqrError(
 		xs, ys, yErrs, [guessExp1, guessX1, guessExp2, guessX2, guessXoffset, guessYoffset, guessCutOff, guessCutOffWidth],
-		@(x,p)(real(powerLaw2WithOffsetsAndCutOff(x, p(1), p(2), p(3), p(4), p(5), p(6), p(7), p(8)))),
+		@(x,p)(real(pl2OffsetCutoff(x, p(1), p(2), p(3), p(4), p(5), p(6), p(7), p(8)))),
 		10);
 
 f = f * yfact;

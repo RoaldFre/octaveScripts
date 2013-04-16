@@ -1,7 +1,7 @@
-function ys = powerLaw2WithCutOffLogLog(xs, exp1, exp2, x1, xCrossOver, cutOff, cutOffWidth)
+function ys = pl2CutoffLoglog(xs, exp1, exp2, x1, xCrossOver, cutOff, cutOffWidth)
 
 
-ys = powerLaw2WithCutOff(xs, exp1, exp2, x1, xCrossOver, cutOff, cutOffWidth);
+ys = pl2Cutoff(xs, exp1, exp2, x1, xCrossOver, cutOff, cutOffWidth);
 
 ys = real(ys); % TODO justifyable? Better way?
 
@@ -13,7 +13,7 @@ if numel(good) > 0
 	highestGood = max(good);
 else
 	% Yeah, ... this isn't good ....
-	printf("powerLawWithOffsetsAndCutOffLogLog: All ys are negative!\n");
+	printf("pl2CutoffLoglog: All ys are negative!\n");
 	lowestGood = 1e-100;
 	highestGood = lowestGood;
 end

@@ -1,8 +1,4 @@
-function ys = powerLaw2WithOffsetsAndCutOff(xs, exp1, x1, exp2, x2, xOffset, yOffset, cutOff, cutOffWidth)
-
-% XXX TODO DEBUG DEBUG
-%xOffset = 0;
-%yOffset = 0;
+function ys = plOffsetCutoff(xs, exponent, x1, xOffset, yOffset, cutOff, cutOffWidth)
 
 % do the cut off as a transformation on the x variables TODO best way? Directly work on ys?
 xTransformed = cutOff + (-cutOffWidth * log(1 + exp((cutOff - xs)/cutOffWidth)));
@@ -16,5 +12,5 @@ xTransformed = cutOff + (-cutOffWidth * log(1 + exp((cutOff - xs)/cutOffWidth)))
 untouchedMask = xTransformed < cutOff - 4*cutOffWidth;
 xTransformed(untouchedMask) = xs(untouchedMask);
 
-ys = yOffset + ((xTransformed + xOffset) / x1).^exp1 + ((xTransformed + xOffset) / x2).^exp2;
+ys = yOffset + ((xTransformed + xOffset) / x1).^exponent;
 

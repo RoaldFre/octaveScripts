@@ -1,7 +1,7 @@
 % xs: still in real space, output: ys in loglog space
-function ys = powerLawWithOffsetsAndCutOffLogLog(xs, exponent, x1, xOffset, yOffset, cutOff, cutOffWidth)
+function ys = plOffsetCutoffLoglog(xs, exponent, x1, xOffset, yOffset, cutOff, cutOffWidth)
 
-ys = powerLawWithOffsetsAndCutOff(xs, exponent, x1, xOffset, yOffset, cutOff, cutOffWidth);
+ys = plOffsetCutoff(xs, exponent, x1, xOffset, yOffset, cutOff, cutOffWidth);
 
 ys = real(ys); % TODO justifyable? Better way?
 
@@ -13,7 +13,7 @@ if numel(good) > 0
 	highestGood = max(good);
 else
 	% Yeah, ... this isn't good ....
-	printf("powerLawWithOffsetsAndCutOffLogLog: All ys are negative!\n");
+	printf("plOffsetCutoffLoglog: All ys are negative!\n");
 	lowestGood = 1e-100;
 	highestGood = lowestGood;
 end

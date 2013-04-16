@@ -3,7 +3,7 @@
 % relative error.
 % A regression in log-log space is probably more appropriate for power 
 % laws!
-function [exp1, exp2, x1, xCrossOver, cutOff, cutOffWidth, exp1err, exp2err, x1err, xCrossOverErr, cutOffErr, cutOffWidthErr, f] = powerLaw2WithCutOffLogLogRegression(xs, ys, yErrs, guessExp1, guessExp2, guessX1, guessXcrossOver, guessCutOff, guessCutOffWidth)
+function [exp1, exp2, x1, xCrossOver, cutOff, cutOffWidth, exp1err, exp2err, x1err, xCrossOverErr, cutOffErr, cutOffWidthErr, f] = pl2CutoffLoglogFit(xs, ys, yErrs, guessExp1, guessExp2, guessX1, guessXcrossOver, guessCutOff, guessCutOffWidth)
 
 if nargin < 8
 	guessCutOff = max(xs) * 0.8;
@@ -40,7 +40,7 @@ bounds = [
 
 [f, p, pErr] = leasqrError(
 		xs, logys, logysErr, pin,
-		@(x,p)(real(powerLaw2WithCutOffLogLog(x, p(1), p(2), p(3), p(4), p(5), p(6)))),
+		@(x,p)(real(pl2CutoffLoglog(x, p(1), p(2), p(3), p(4), p(5), p(6)))),
 		2, bounds);
 
 f = exp(f) * yfact;

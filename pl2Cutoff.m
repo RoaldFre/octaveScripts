@@ -1,4 +1,4 @@
-function ys = powerLaw2WithCutOff(xs, exp1, exp2, x1, xCrossOver, cutOff, cutOffWidth)
+function ys = pl2Cutoff(xs, exp1, exp2, x1, xCrossOver, cutOff, cutOffWidth)
 
 x1 = abs(x1);
 xCrossOver = abs(xCrossOver);
