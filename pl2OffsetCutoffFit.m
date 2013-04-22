@@ -3,7 +3,9 @@
 % relative error.
 % A regression in log-log space is probably more appropriate for power 
 % laws!
-function [exp1, x1, exp2, x2, xOffset, yOffset, cutOff, cutOffWidth, exp1err, x1err, exp2err, x2err, xOffsetErr, yOffsetErr, cutOffErr, cutOffWidthErr, f] = pl2OffsetCutoffFit(xs, ys, yErrs, guessExp1, guessX1, guessExp2, guessX2, guessCutOff, guessCutOffWidth, guessXoffset, guessYoffset)
+function [exp1, exp2, x1, xCrossOver, cutOff, cutOffWidth, xOffset, yOffset, exp1err, exp2err, x1err, xCrossOverErr, cutOffErr, cutOffWidthErr, xOffsetErr, yOffsetErr, f] = pl2OffsetCutoffFit(xs, ys, yErrs, guessExp1, guessExp2, guessX1, guessXcrossOver, guessCutOff, guessCutOffWidth, guessXoffset, guessYoffset)
+
+
 
 if nargin < 8
 	guessCutOff = max(xs) * 0.8;
@@ -25,36 +27,57 @@ xs = xs / xfact;
 ys = ys / yfact;
 yErrs = yErrs / yfact;
 guessX1 = guessX1 / xfact;
-guessX2 = guessX2 / xfact;
+guessXcrossOver = guessXcrossOver / xfact;
 guessCutOff = guessCutOff / xfact;
 guessCutOffWidth = guessCutOffWidth / xfact;
 guessXoffset = guessXoffset / xfact;
 guessYoffset = guessYoffset / yfact;
 
 
-[f, p, pErr] = leasqrError(
-		xs, ys, yErrs, [guessExp1, guessX1, guessExp2, guessX2, guessXoffset, guessYoffset, guessCutOff, guessCutOffWidth],
-		@(x,p)(real(pl2OffsetCutoff(x, p(1), p(2), p(3), p(4), p(5), p(6), p(7), p(8)))),
-		10);
+% TODO hardcoded for now!!
+bounds = [
+	0.1, 10;
+	0.1, 10;
+	1e-13/xfact, 1e-7/xfact;
+	1e-13/xfact, 1e-7/xfact;
+	1e-13/xfact, 1e-7/xfact;
+	1e-13/xfact, 1e-7/xfact;
+	%-1e-20,1e-20;
+	%-1e-20,1e-20;
+	%-Inf, Inf;
+	%-Inf, Inf;
+	-1e-7/xfact, 1e-7/xfact;
+	-20/yfact, 20/yfact;
+	];
+
+
+%[f, p, pErr] = leasqrError(
+		%xs, ys, yErrs, [guessExp1, guessExp2, guessX1, guessXcrossOver, guessCutOff, guessCutOffWidth, guessXoffset, guessYoffset],
+		%@(x,p)(p(8) + real(pl2Cutoff(x + p(7), p(1), p(2), p(3), p(4), p(5), p(6)))),
+		%2, bounds);
+
+[p, f] = safit(xs, ys,
+		@(x,p)(p(8) + real(pl2Cutoff(x + p(7), p(1), p(2), p(3), p(4), p(5), p(6)))),
+		[guessExp1, guessExp2, guessX1, guessXcrossOver, guessCutOff, guessCutOffWidth, guessXoffset, guessYoffset]',
+		bounds);
 
 f = f * yfact;
 
 exp1 = p(1);
-x1 = p(2) * xfact / yfact^(1/exp1);
 exp2 = p(2);
-x2 = p(4) * xfact / yfact^(1/exp2);
-xOffset = p(5) * xfact;
-yOffset = p(6) * yfact;
-cutOff = p(7) * xfact;
-cutOffWidth = p(8) * xfact;
+x1 = p(3) * xfact / yfact^(1/exp1);
+xCrossOver = p(4) * xfact;
+cutOff = p(5) * xfact;
+cutOffWidth = p(6) * xfact;
+xOffset = p(7) * xfact;
+yOffset = p(8) * yfact;
 
-exp1err = pErr(1);
-x1err = pErr(2) * xfact / yfact^(1/exp1);
-exp2err = pErr(3);
-x2err = pErr(4) * xfact / yfact^(1/exp2);
-xOffsetErr = pErr(5) * xfact;
-yOffsetErr = pErr(6) * yfact;
-cutOffErr = pErr(7) * xfact;
-cutOffWidthErr = pErr(8) * xfact;
-
+%exp1err = pErr(1);
+%exp2err = pErr(2);
+%x1err = pErr(3) * xfact / yfact^(1/exp1);
+%xCrossOverErr = pErr(4) * xfact;
+%cutOffErr = pErr(5) * xfact;
+%cutOffWidthErr = pErr(6) * xfact;
+%xOffsetErr = pErr(7) * xfact;
+%yOffsetErr = pErr(8) * yfact;
 
