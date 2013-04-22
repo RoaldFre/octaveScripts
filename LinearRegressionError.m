@@ -1,5 +1,11 @@
 function [p, pErr, y_var, r] = LinearRegressionError(F,y,yErr)
 
+if nargin < 3 || isempty(yErr)
+	[p,y_var,r,p_var] = LinearRegression(F, y);
+	pErr = [];
+	return
+end
+
 weights = 1./yErr;
 
 [p,y_var,r,p_var] = LinearRegression(F, y, weights);

@@ -3,29 +3,33 @@
 % function [cte, exponent, cteStddev, exponentStddev] = loglogRegression(xs, ys, guessCte, guessExponent, yerr)
 function [cte, exponent, cteStddev, exponentStddev] = loglogRegression(xs, ys, guessCte, guessExponent, yerr)
 
-if (nargin < 5)
-	error("Not enough required arguments!");
-end
-
 xs = xs(:);
 ys = ys(:);
-yerr = yerr(:);
 
 logys = log(ys);
 logxs = log(xs);
-logysErr = yerr ./ ys;
 
 %figure
 %errorbar(logxs/log(10), logys/log(10), logysErr);
 
 F = [ones(numel(logxs), 1), logxs];
+if (nargin < 5 || isempty(yerr))
+	% no yerr given
+	[p] = LinearRegressionError(F, logys);
+	cteExponent = p(1);
+	exponent = p(2);
+	cte = exp(cteExponent);
+else
+	yerr = yerr(:);
+	logysErr = yerr ./ ys;
 
-[p, pErr] = LinearRegressionError(F, logys, logysErr);
-cteExponent = p(1);
-cteExponentStddev = pErr(1);
-exponent = p(2);
-exponentStddev = pErr(2);
+	[p, pErr] = LinearRegressionError(F, logys, logysErr);
+	cteExponent = p(1);
+	cteExponentStddev = pErr(1);
+	exponent = p(2);
+	exponentStddev = pErr(2);
 
-cte = exp(cteExponent);
-cteStddev = cte * cteExponentStddev;
+	cte = exp(cteExponent);
+	cteStddev = cte * cteExponentStddev;
+end
 
