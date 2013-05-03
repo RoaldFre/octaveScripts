@@ -18,6 +18,7 @@ xsp  = zeros(1, 2*numel(xs));
 ysp  = zeros(1, 2*numel(xs));
 dysp = zeros(1, 2*numel(xs));
 
+%profile on;
 for i = 1:numel(xs)
 	if (numel(xs{i}) != numel(ys{i}) || numel(ys{i}) != numel(dys{i}))
 		error "xs, ys and dys have inconsistent sizes"
@@ -38,12 +39,16 @@ for i = 1:numel(xs)
 			if isempty(jp) || (jp+1 > numel(xs{ip}))
 				continue
 			end
-			xsp(numPrimed + 1)  = xs{ip}(jp);
-			xsp(numPrimed + 2)  = xs{ip}(jp + 1);
-			ysp(numPrimed + 1)  = ys{ip}(jp);
-			ysp(numPrimed + 2)  = ys{ip}(jp + 1);
-			dysp(numPrimed + 1) = dys{ip}(jp);
-			dysp(numPrimed + 2) = dys{ip}(jp + 1);
+			%manually do subexpression elimination
+			npp1 = numPrimed + 1;
+			npp2 = numPrimed + 2;
+			jpp1 = jp + 1;
+			xsp(npp1)  = xs{ip}(jp);
+			xsp(npp2)  = xs{ip}(jpp1);
+			ysp(npp1)  = ys{ip}(jp);
+			ysp(npp2)  = ys{ip}(jpp1);
+			dysp(npp1) = dys{ip}(jp);
+			dysp(npp2) = dys{ip}(jpp1);
 			numPrimed += 2;
 		end
 		if numPrimed < 1
@@ -68,11 +73,12 @@ for i = 1:numel(xs)
 	end
 end
 
-%N
+%profile off
+%profshow(profile('info'));
 
 if N == 0
 	S = Inf;
 else
-	S = S/N;
+	S = sqrt(S/N);
 end
 
