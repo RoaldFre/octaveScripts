@@ -4,12 +4,16 @@
 %
 % here, z = nu / beta
 % see overlapQuality() for more info
-function S = overlapQualityWrapperSingleExponent(beta, nu, Ns, xs, ys, dys)
+function S = overlapQualityWrapperSingleExponent(betaWithPossiblyOffsets, nu, Ns, xs, ys, dys)
 
+beta = betaWithPossiblyOffsets(1);
 alpha = nu / beta;
-S = overlapQualityWrapper([alpha, beta], Ns, xs, ys, dys);
 
-% or use the most general wrapper with offsets:
-%numDataSets = numel(xs);
-%pin = [alpha, beta, zeros(1, 2*numDataSets)];
-%S = overlapQualityWrapperOffsets(pin, Ns, xs, ys, dys);
+if numel(betaWithPossiblyOffsets) == 1
+	offsetParameters = [];
+else
+	offsetParameters = betaWithPossiblyOffsets(2:end)(:)';
+end
+
+S = overlapQualityWrapperOffsets([alpha, beta, offsetParameters], Ns, xs, ys, dys);
+
