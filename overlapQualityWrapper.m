@@ -10,7 +10,8 @@ if (numel(xs) != numel(ys)) || (numel(xs) != numel(dys))
 	error "overlapQualityWrapper: Got cells of different size"
 end
 
-%clf; hold on;
+%finiteSizeCollapse(exponents, Ns, xs, ys, dys)
+
 for i = 1:numel(xs)
 	if (numel(xs{i}) != numel(ys{i}) || numel(ys{i}) != numel(dys{i}))
 		error "xs, ys and dys have inconsistent sizes"
@@ -20,13 +21,8 @@ for i = 1:numel(xs)
 	ys{i} = ys{i} ./ xs{i}.^alpha;
 	dys{i} = dys{i} ./ xs{i}.^alpha;
 	xs{i} = xs{i} / Ns(i)^beta;
-
-	%loglog(xs{i}, ys{i})
-	%plot(xs{i}, ys{i})
 end
-%title(['alpha = ',num2str(alpha),', beta = ',num2str(beta)]);
-%sleep(1e-9);
-disp(['alpha = ',num2str(alpha),', beta = ',num2str(beta)]);
 
 
-S = overlapQuality(xs, ys, dys);
+S = overlapQuality(xs, ys, dys)
+disp(['alpha = ',num2str(alpha),', beta = ',num2str(beta),', S = ',num2str(S)]);

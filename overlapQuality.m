@@ -35,10 +35,13 @@ for i = 1:numel(xs)
 			% The find below is slow and O(n), can use the fact 
 			% that xs are sorted to do it in 'constant' 
 			% (amortized) time, but this works for now:
+			%xs{ip}
+			%xij
 			jp = find(xs{ip} < xij, 1, 'last');
 			if isempty(jp) || (jp+1 > numel(xs{ip}))
 				continue
 			end
+			%[i j ip jp]
 			%manually do subexpression elimination
 			npp1 = numPrimed + 1;
 			npp2 = numPrimed + 2;
@@ -54,15 +57,15 @@ for i = 1:numel(xs)
 		if numPrimed < 1
 			continue
 		end
-		xsp  = xsp(1:numPrimed);
-		ysp  = ysp(1:numPrimed);
-		dysp = dysp(1:numPrimed);
-		w = 1./(dysp.^2);
+		xspActive  = xsp(1:numPrimed);
+		yspActive  = ysp(1:numPrimed);
+		dyspActive = dysp(1:numPrimed);
+		w = 1./(dyspActive'.^2);
 		K = sum(w);
-		Kx = sum(w .* xsp);
-		Ky = sum(w .* ysp);
-		Kxx = sum(w .* xsp.^2);
-		Kxy = sum(w .* xsp .* ysp);
+		Kx = xspActive * w;
+		Ky = yspActive * w;
+		Kxx = xspActive.^2 * w;
+		Kxy = (xspActive .* yspActive) * w;
 		D = K*Kxx - Kx^2;
 
 		Yij = (Kxx*Ky - Kx*Kxy)/D + xij*(K*Kxy - Kx*Ky)/D;
