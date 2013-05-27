@@ -1,5 +1,10 @@
 function ys = blockAverage(xs, blockSize)
 
+if blockSize == 1
+	ys = xs;
+	return
+end
+
 inputSize = numel(xs);
 finalSize = ceil(inputSize / blockSize);
 
@@ -10,4 +15,4 @@ for i = 1:finalSize-1
 end
 
 ys(finalSize) = mean(xs((finalSize-1)*blockSize + 1 : inputSize));
-	
+
