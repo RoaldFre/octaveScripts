@@ -133,8 +133,8 @@ else
 	alphaErr = std(alphas);
 	betaErr = std(betas);
 	if not(fixOffsetToZero)
-		xOffsetsErr = std(xOffsetss);
-		yOffsetsErr = std(yOffsetss);
+		xOffsetsErr = std(xOffsetss)';
+		yOffsetsErr = std(yOffsetss)';
 	end
 
 	% standard deviation of standard deviation
