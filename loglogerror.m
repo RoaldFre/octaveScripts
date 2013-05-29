@@ -5,6 +5,7 @@ if nargin < 4
 	color = 'b';
 end
 
-h = loglogerr(xs, ys, yerrs, color);
+h = loglogerr(xs, ys, yerrs)
+set(h, "color", color);
 set(h, "marker", ".");
 set(h, "linestyle", "none");

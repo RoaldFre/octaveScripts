@@ -5,7 +5,8 @@ if nargin < 4
 	color = 'b';
 end
 
-h = errorbar(xs, ys, yerrs, color);
+h = errorbar(xs, ys, yerrs);
+set(h, "color", color);
 set(h, "marker", ".");
 set(h, "linestyle", "none");
 
