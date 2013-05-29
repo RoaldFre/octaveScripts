@@ -15,5 +15,5 @@ else
 	offsetParameters = betaWithPossiblyOffsets(2:end)(:)';
 end
 
-S = overlapQualityWrapperOffsets([alpha, beta, offsetParameters], Ns, xs, ys, dys);
+S = overlapQualityWrapper([alpha, beta, offsetParameters], Ns, xs, ys, dys);
 
