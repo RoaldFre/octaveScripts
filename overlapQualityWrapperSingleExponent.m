@@ -4,7 +4,7 @@
 %
 % here, z = nu / beta
 % see overlapQuality() for more info
-function S = overlapQualityWrapperSingleExponent(betaWithPossiblyOffsets, nu, Ns, xs, ys, dys)
+function S = overlapQualityWrapperSingleExponent(betaWithPossiblyOffsets, scalingFunction, nu, Ns, xs, ys, dys)
 
 beta = betaWithPossiblyOffsets(1);
 alpha = nu / beta;
@@ -15,5 +15,5 @@ else
 	offsetParameters = betaWithPossiblyOffsets(2:end)(:)';
 end
 
-S = overlapQualityWrapper([alpha, beta, offsetParameters], Ns, xs, ys, dys);
+S = overlapQualityWrapper([alpha, beta, offsetParameters], scalingFunction, Ns, xs, ys, dys);
 

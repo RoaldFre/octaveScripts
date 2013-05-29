@@ -23,6 +23,7 @@ for i = 1:numel(xs)
 	if (numel(xs{i}) != numel(ys{i}) || numel(ys{i}) != numel(dys{i}))
 		error "xs, ys and dys have inconsistent sizes"
 	end
+
 	for j = 1:numel(xs{i})
 		numPrimed = 0;
 		xij = xs{i}(j);
@@ -71,7 +72,13 @@ for i = 1:numel(xs)
 		Yij = (Kxx*Ky - Kx*Kxy)/D + xij*(K*Kxy - Kx*Ky)/D;
 		dYij2 = (Kxx - 2*xij*Kx + xij^2*K)/D;
 
-		S += (yij - Yij)^2 / (dyij2 + dYij2);
+		extraTerm = (yij - Yij)^2 / (dyij2 + dYij2);
+		if isnan(extraTerm)
+			warning "Ignoring a NaN term in the overlapQuality sum!"
+			continue;
+		end
+
+		S += extraTerm;
 		N++;
 	end
 end
@@ -79,12 +86,16 @@ end
 %profile off
 %profshow(profile('info'));
 
-if N == 0 || isnan(S)
+if N == 0
+	disp("WARNING: No overlapping samples in overlapQuality!");
 	%S = Inf;
 	S = 1e3; % For numerical minimization that uses derivatives: can't 
 		 % use inf. On the other hand: this creates a plateau where 
 		 % the gradient is zero, so be careful not to get 'trapped' 
 		 % here!
+elseif isnan(S)
+	disp("WARNING: S was NAN in overlapQuality!");
+	S = 1e3;
 else
 	S = sqrt(S/N);
 end

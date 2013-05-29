@@ -14,13 +14,15 @@
 % xs:  cell where the i'th element is a 1D array of x values for system size Ns(i)
 % ys:  cell where the i'th element is a 2D array of y values for system size Ns(i), each row is one run
 % dys: ignored (errors get calculated from the full ys data sets)
+% scalingFunction: name of function handle to, for instance, 
+%                  finiteSizeRescaleWithTime or finiteSizeRescaleWithSize.
 %
 % Last two input parameters:
 %   - fixOffsetToZero: don't fit an offset, fix it to zero
 %   - singleExponent: only fit one exponent, nuOrGuessAlpha is actually 'nu' and alpha = nu/beta.
 %
 % function [alpha, alphaErr, beta, betaErr, quality, xOffsets, xOffsetsErr, yOffsets, yOffsetsErr] = finiteSizeScaling(Ns, xs, ys, dys, nuOrGuessAlpha, guessBeta, eps, bootstrapSamples, fixOffsetToZero, singleExponent, squaredDeviation)
-function [alpha, alphaErr, beta, betaErr, quality, xOffsets, xOffsetsErr, yOffsets, yOffsetsErr] = finiteSizeScaling(Ns, xs, ys, dys, nuOrGuessAlpha, guessBeta, eps, bootstrapSamples, fixOffsetToZero, singleExponent, squaredDeviation)
+function [alpha, alphaErr, beta, betaErr, quality, xOffsets, xOffsetsErr, yOffsets, yOffsetsErr] = finiteSizeScaling(Ns, xs, ys, dys, nuOrGuessAlpha, guessBeta, scalingFunction, eps, bootstrapSamples, fixOffsetToZero, singleExponent, squaredDeviation)
 
 if nargin < 5; nuOrGuessAlpha = 1; end;
 if nargin < 6; guessBeta = 1; end;
@@ -32,9 +34,9 @@ if nargin < 8;
 	xOffsetsErr = nan;
 	yOffsetsErr = nan;
 end;
-if nargin < 9; fixOffsetToZero = false; end;
-if nargin < 10; singleExponent = false; end;
-if nargin < 11; squaredDeviation = false; end;
+if nargin < 10; fixOffsetToZero = false; end;
+if nargin < 11; singleExponent = false; end;
+if nargin < 12; squaredDeviation = false; end;
 
 
 
@@ -60,13 +62,13 @@ if bootstrapSamples == 0
 
 	if singleExponent
 		[p, quality, nev] = minimize("overlapQualityWrapperSingleExponent", ...
-				{[guessBeta; offsetParameters], nu, Ns, xs, ys, dys}, ...
+				{[guessBeta; offsetParameters], scalingFunction, nu, Ns, xs, ys, dys}, ...
 				'ftol', eps, 'utol', eps);
 		beta = p(1);
 		p = [nu/thisBeta; p]
 	else
 		[p, quality, nev] = minimize("overlapQualityWrapper", ...
-				{[guessAlpha; guessBeta; offsetParameters], Ns, xs, ys, dys}, ...
+				{[guessAlpha; guessBeta; offsetParameters], scalingFunction, Ns, xs, ys, dys}, ...
 				'ftol', eps, 'utol', eps);
 	end
 
@@ -91,13 +93,13 @@ else
 	end
 	if singleExponent
 		[p, quality, nev] = minimize("overlapQualityWrapperSingleExponent", ...
-				{[guessBeta; offsetParameters], nu, Ns, xs, meanYs, errYs}, ...
+				{[guessBeta; offsetParameters], scalingFunction, nu, Ns, xs, meanYs, errYs}, ...
 				'ftol', eps, 'utol', eps);
 		thisBeta = p(1);
 		p = [nu/thisBeta; p]
 	else
 		[p, quality, nev] = minimize("overlapQualityWrapper", ...
-				{[guessAlpha; guessBeta; offsetParameters], Ns, xs, meanYs, errYs}, ...
+				{[guessAlpha; guessBeta; offsetParameters], scalingFunction, Ns, xs, meanYs, errYs}, ...
 				'ftol', eps, 'utol', eps);
 	end
 
@@ -111,8 +113,8 @@ else
 	alpha = p(1);
 	beta = p(2);
 
-
-	finiteSizeCollapse(p, Ns, xs, meanYs, errYs)
+	
+	finiteSizeCollapse(p, scalingFunction, Ns, xs, meanYs, errYs)
 	sleep(1);
 
 
@@ -133,13 +135,13 @@ else
 		end
 		if singleExponent
 			[p, qual, nev] = minimize("overlapQualityWrapperSingleExponent", ...
-					{[guessBeta; offsetParameters], nu, Ns, xs, meanYs, errYs}, ...
+					{[guessBeta; offsetParameters], scalingFunction, nu, Ns, xs, meanYs, errYs}, ...
 					'ftol', eps, 'utol', eps);
 			thisBeta = p(1);
 			p = [nu/thisBeta; p]
 		else
 			[p, qual, nev] = minimize("overlapQualityWrapper", ...
-					{[alpha; beta; offsetParameters], Ns, xs, meanYs, errYs}, ...
+					{[alpha; beta; offsetParameters], scalingFunction, Ns, xs, meanYs, errYs}, ...
 					'ftol', eps, 'utol', eps);
 		end
 		alphas(s) = p(1);
