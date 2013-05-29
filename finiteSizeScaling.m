@@ -19,8 +19,8 @@
 %   - fixOffsetToZero: don't fit an offset, fix it to zero
 %   - singleExponent: only fit one exponent, nuOrGuessAlpha is actually 'nu' and alpha = nu/beta.
 %
-% function [alpha, alphaErr, beta, betaErr, quality, xOffsets, xOffsetsErr, yOffsets, yOffsetsErr] = finiteSizeScaling(Ns, xs, ys, dys, nuOrGuessAlpha, guessBeta, eps, bootstrapSamples, fixOffsetToZero, singleExponent)
-function [alpha, alphaErr, beta, betaErr, quality, xOffsets, xOffsetsErr, yOffsets, yOffsetsErr] = finiteSizeScaling(Ns, xs, ys, dys, nuOrGuessAlpha, guessBeta, eps, bootstrapSamples, fixOffsetToZero, singleExponent)
+% function [alpha, alphaErr, beta, betaErr, quality, xOffsets, xOffsetsErr, yOffsets, yOffsetsErr] = finiteSizeScaling(Ns, xs, ys, dys, nuOrGuessAlpha, guessBeta, eps, bootstrapSamples, fixOffsetToZero, singleExponent, squaredDeviation)
+function [alpha, alphaErr, beta, betaErr, quality, xOffsets, xOffsetsErr, yOffsets, yOffsetsErr] = finiteSizeScaling(Ns, xs, ys, dys, nuOrGuessAlpha, guessBeta, eps, bootstrapSamples, fixOffsetToZero, singleExponent, squaredDeviation)
 
 if nargin < 5; nuOrGuessAlpha = 1; end;
 if nargin < 6; guessBeta = 1; end;
@@ -34,6 +34,7 @@ if nargin < 8;
 end;
 if nargin < 9; fixOffsetToZero = false; end;
 if nargin < 10; singleExponent = false; end;
+if nargin < 11; squaredDeviation = false; end;
 
 
 
@@ -58,11 +59,15 @@ if bootstrapSamples == 0
 %WITHOUT BOOTSTRAPPING
 
 	if singleExponent
-		[p, quality, nev] = minimize("overlapQualityWrapperSingleExponent", {[guessBeta; offsetParameters], nu, Ns, xs, ys, dys}, 'ftol', eps, 'utol', eps);
+		[p, quality, nev] = minimize("overlapQualityWrapperSingleExponent", ...
+				{[guessBeta; offsetParameters], nu, Ns, xs, ys, dys}, ...
+				'ftol', eps, 'utol', eps);
 		beta = p(1);
 		p = [nu/thisBeta; p]
 	else
-		[p, quality, nev] = minimize("overlapQualityWrapperOffsets", {[guessAlpha; guessBeta; offsetParameters], Ns, xs, ys, dys}, 'ftol', eps, 'utol', eps);
+		[p, quality, nev] = minimize("overlapQualityWrapperOffsets", ...
+				{[guessAlpha; guessBeta; offsetParameters], Ns, xs, ys, dys}, ...
+				'ftol', eps, 'utol', eps);
 	end
 
 	if fixOffsetToZero
@@ -78,14 +83,22 @@ if bootstrapSamples == 0
 
 else
 %WITH BOOTSTRAPPING
-
-	[meanYs, errYs] = meanOfSamples(ys);
+	
+	if squaredDeviation
+		[meanYs, errYs, xs] = meanSquaredDeviation(ys, xs); % WARNING, this changes xs to a 'mean squared mode'!!!
+	else
+		[meanYs, errYs] = meanOfSamples(ys);
+	end
 	if singleExponent
-		[p, quality, nev] = minimize("overlapQualityWrapperSingleExponent", {[guessBeta; offsetParameters], nu, Ns, xs, meanYs, errYs}, 'ftol', eps, 'utol', eps);
+		[p, quality, nev] = minimize("overlapQualityWrapperSingleExponent", ...
+				{[guessBeta; offsetParameters], nu, Ns, xs, meanYs, errYs}, ...
+				'ftol', eps, 'utol', eps);
 		thisBeta = p(1);
 		p = [nu/thisBeta; p]
 	else
-		[p, quality, nev] = minimize("overlapQualityWrapperOffsets", {[guessAlpha; guessBeta; offsetParameters], Ns, xs, meanYs, errYs}, 'ftol', eps, 'utol', eps);
+		[p, quality, nev] = minimize("overlapQualityWrapperOffsets", ...
+				{[guessAlpha; guessBeta; offsetParameters], Ns, xs, meanYs, errYs}, ...
+				'ftol', eps, 'utol', eps);
 	end
 
 	if fixOffsetToZero
@@ -99,6 +112,10 @@ else
 	beta = p(2);
 
 
+	finiteSizeCollapse(p, Ns, xs, meanYs, errYs)
+	sleep(1);
+
+
 	% Resample for error
 	alphas = zeros(bootstrapSamples, 1);
 	betas = zeros(bootstrapSamples, 1);
@@ -109,13 +126,21 @@ else
 	more off;
 	for s = 1:bootstrapSamples
 		printf("Bootstrap sample %d of %d\n", s, bootstrapSamples);
-		[meanYs, errYs] = bootstrapSampleMeans(ys);
+		if squaredDeviation
+			[meanYs, errYs] = bootstrapSampleSquaredDeviation(ys);
+		else
+			[meanYs, errYs] = bootstrapSampleMean(ys);
+		end
 		if singleExponent
-			[p, qual, nev] = minimize("overlapQualityWrapperSingleExponent", {[guessBeta; offsetParameters], nu, Ns, xs, meanYs, errYs}, 'ftol', eps, 'utol', eps);
+			[p, qual, nev] = minimize("overlapQualityWrapperSingleExponent", ...
+					{[guessBeta; offsetParameters], nu, Ns, xs, meanYs, errYs}, ...
+					'ftol', eps, 'utol', eps);
 			thisBeta = p(1);
 			p = [nu/thisBeta; p]
 		else
-			[p, qual, nev] = minimize("overlapQualityWrapperOffsets", {[alpha; beta; offsetParameters], Ns, xs, meanYs, errYs}, 'ftol', eps, 'utol', eps);
+			[p, qual, nev] = minimize("overlapQualityWrapperOffsets", ...
+					{[alpha; beta; offsetParameters], Ns, xs, meanYs, errYs}, ...
+					'ftol', eps, 'utol', eps);
 		end
 		alphas(s) = p(1);
 		betas(s) = p(2);
