@@ -79,8 +79,12 @@ end
 %profile off
 %profshow(profile('info'));
 
-if N == 0
-	S = Inf;
+if N == 0 || isnan(S)
+	%S = Inf;
+	S = 1e3; % For numerical minimization that uses derivatives: can't 
+		 % use inf. On the other hand: this creates a plateau where 
+		 % the gradient is zero, so be careful not to get 'trapped' 
+		 % here!
 else
 	S = sqrt(S/N);
 end
