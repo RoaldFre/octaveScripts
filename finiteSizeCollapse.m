@@ -8,6 +8,7 @@ alpha = exponentsAndOffsets(1);
 beta = exponentsAndOffsets(2);
 
 [xs, ys, dys] = feval(scalingFunction, exponentsAndOffsets, Ns, xs, ys, dys);
+S = overlapQuality(xs, ys, dys);
 
 numDataSets = numel(xs);
 
@@ -26,7 +27,7 @@ for i = 1:numDataSets
 	set(h ,'Color', plotColors(plotColorsI,:));
 	plotLegend{i} = ["N = ",num2str(Ns(i))];
 end
-title(['alpha = ',num2str(alpha),', beta = ',num2str(beta)]);
+title(['alpha = ',num2str(alpha),', beta = ',num2str(beta),', S = ',num2str(S)]);
 legend(plotLegend);
 sleep(1e-9);
 hold off;
