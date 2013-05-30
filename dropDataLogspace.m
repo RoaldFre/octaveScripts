@@ -20,12 +20,12 @@
 %   duplicates will be removed from the output. Otherwise they remain in 
 %   the output.
 %
-%   Default: false
+%   Default: true
 %
 function ys = dropDataLogspace(xs, finalSizeFactor, dropDuplicates)
 
 if nargin < 2; finalSizeFactor = 1; end
-if nargin < 3; dropDuplicates = false; end
+if nargin < 3; dropDuplicates = true; end
 
 if isvector(xs)
 	inputSize = numel(xs);
