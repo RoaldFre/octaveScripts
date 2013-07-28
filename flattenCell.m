@@ -1,15 +1,24 @@
 % Flattens cells of cells of cells of ... etc
 function data = flattenCell(data)
 
-% Based on decellify from http://blogs.mathworks.com/loren/2006/06/21/cell-arrays-and-their-contents/
-
 if not(iscell(data))
 	return
 end
 
-data = cellfun(@flattenCell,data,'UniformOutput',false);
-if any(cellfun(@iscell,data))
-	data = [data{:}];
+if not(any(cellfun(@iscell, data)))
+	return
 end
 
+data = cellfun(@flattenCell,data,'UniformOutput',false);
+
+N = sum(cellfun(@numel, data));
+newData = cell(N,1);
+i = 1;
+for j = 1:numel(data)
+	c = data{j};
+	n = numel(c);
+	newData(i:i+n-1) = c;
+	i = i + n;
+end
+data = newData;
 
