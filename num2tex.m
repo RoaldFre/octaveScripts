@@ -1,5 +1,5 @@
 % This does a num2str, but with latex format and instead of 1.23e42 we 
-% return 1e23 \cdot 10^{42}
+% return 1.23 \cdot 10^{42}
 %
 % Exponent notation is used for numbers outside the range 1e-4 to 1e4 (non inclusive).
 % 

@@ -6,5 +6,5 @@
 function [sqDev, err] = bootstrapSampleSquaredDeviation(data)
 
 data = bootstrapResample(data);
-[sqDev, err] = meanSquaredDeviation(data);
+[sqDev, err] = squaredMeanDeviation(data);
 

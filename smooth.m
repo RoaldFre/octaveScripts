@@ -4,6 +4,10 @@
 %
 % function y = smooth(x, tau)
 function y = smooth(x, tau)
+
+if tau == 0
+	y = x;
+else
 	alpha = 1/tau;
 	y = zeros(size(x));
 	y(1) = x(1);

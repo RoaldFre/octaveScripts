@@ -27,6 +27,11 @@ function ys = dropDataLogspace(xs, finalSizeFactor, dropDuplicates)
 if nargin < 2; finalSizeFactor = 1; end
 if nargin < 3; dropDuplicates = true; end
 
+if finalSizeFactor <= 0
+	ys = xs;
+	return
+end
+
 if isvector(xs)
 	inputSize = numel(xs);
 	finalSize = ceil(log(inputSize + 1)/log(2) * finalSizeFactor);
