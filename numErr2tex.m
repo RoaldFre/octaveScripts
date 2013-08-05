@@ -22,7 +22,7 @@ errMantissa = err / 10^errExponent;
 
 % If error has bigger exponent than number -> 0
 if errExponent > floor(log10(abs(num)))
-	str = ['(0 \pm ',num2str(errMantissa),') \cdot 10^',num2str(errExponent)];
+	str = ['(0 \pm ',num2str(errMantissa),') \cdot 10^{',num2str(errExponent),'}'];
 	return
 end
 
@@ -35,8 +35,8 @@ numExponent = floor(log10(abs(num)));
 numMantissa = num / 10^numExponent;
 
 
-% Don't use scientific notation for errors between X and 0.00X
-if -3 <= errExponent && errExponent < 1
+% Don't use scientific notation for errors between X and 0.00X, or if the exponent would be zero
+if (-3 <= errExponent && errExponent < 1) || numExponent == 0
 	numstr = roundsdStr(roundsd(num,sd), sd);
 	str = [numstr,' \pm ',num2str(err)];
 	return;
