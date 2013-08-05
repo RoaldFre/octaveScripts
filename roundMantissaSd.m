@@ -9,7 +9,7 @@ if abs(num) < 1 || abs(num) >= 10
 	error("Need a number between 1 and 10!");
 end
 
-if sd < 0
+if sd <= 0
 	str = '0';
 	return
 end
@@ -20,5 +20,5 @@ if abs(num) >= 10
 	error("Rounding the number caused it to get abs(num) >= 10!");
 end
 
-str = sprintf(['%.',num2str(sd-1),'f'], num)
+str = sprintf(['%.',num2str(sd-1),'f'], num);
 
