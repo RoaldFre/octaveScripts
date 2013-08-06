@@ -6,12 +6,32 @@
 % dys: cell of 1D arrays of y value standard errors
 function S = overlapQuality(xs, ys, dys)
 
+huge_val = 1e3;
+
 if (numel(xs) != numel(ys)) || (numel(xs) != numel(dys))
 	error "overlapQuality: Got cells of different size"
 end
 
+% Check for sane input
+for i = 1:numel(xs)
+	if ((sum(isfinite(xs{i})) == 0) ...
+	  || (sum(isfinite(ys{i})) == 0)...
+	  || (sum(isfinite(dys{i})) == 0))
+		warning "One of the datasets has only undefined values!"
+		S = huge_val;
+		return
+	end
+end
+
+% Check for empty input, return infinity in that case
+if numel(xs) == 0
+	S = inf;
+	return
+end
+
 S = 0;
 N = 0; % Number of terms in sum for S
+accumNumNeighbours = 0;
 
 % 'primed' numbers, called (x_l, y_l, dy_l) in paper
 xsp  = zeros(1, 2*numel(xs));
@@ -74,28 +94,47 @@ for i = 1:numel(xs)
 
 		extraTerm = (yij - Yij)^2 / (dyij2 + dYij2);
 		if isnan(extraTerm)
-			warning "Ignoring a NaN term in the overlapQuality sum!"
-			continue;
+			#warning "Ignoring a NaN term in the overlapQuality sum!"
+			#continue;
+			warning "NaN term in the overlapQuality sum! Returning something big!"
+			S = huge_val;
+			return
 		end
 
 		S += extraTerm;
 		N++;
+		accumNumNeighbours += numPrimed/2;
 	end
 end
 
 %profile off
 %profshow(profile('info'));
 
+maxN = 0;
+for i = 1:numel(xs)
+	maxN += numel(xs{i});
+end
+
+meanNumOverlapping = 1 + accumNumNeighbours / maxN;
+
 if N == 0
-	disp("WARNING: No overlapping samples in overlapQuality!");
+	warning "No overlapping samples in overlapQuality!"
 	%S = Inf;
-	S = 1e3; % For numerical minimization that uses derivatives: can't 
+	S = huge_val; % For numerical minimization that uses derivatives: can't 
 		 % use inf. On the other hand: this creates a plateau where 
 		 % the gradient is zero, so be careful not to get 'trapped' 
 		 % here!
+#elseif N < maxN / 1.5
+#	warning "Very few overlapping samples in overlapQuality! Returning something big!"
+#	S = huge_val;
+elseif meanNumOverlapping < numel(xs) / 1.4
+	meanNumOverlapping
+	numel(xs)
+	warning "Very few overlapping samples in overlapQuality! Returning something big!"
+	S = huge_val;
 elseif isnan(S)
-	disp("WARNING: S was NAN in overlapQuality!");
-	S = 1e3;
+	warning "S was NaN in overlapQuality!"
+	S = huge_val;
 else
 	S = sqrt(S/N);
 end
