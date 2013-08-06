@@ -264,17 +264,51 @@ if bootstrapSamples == 0
 else
 	%WITH BOOTSTRAPPING
 	
-	% Determine fit for all data before resampling for error
+	% Prepare all input into cells, and iterate over them with parcellfun()
+	if bootstrapSamples > 0
+		means = cell(bootstrapSamples, 1);
+		errs = cell(bootstrapSamples, 1);
+	else
+		means = cell(1, 1);
+		errs = cell(1, 1);
+	end
+
+
+	% The first element is the regular (non bootstrap sampled) data
 	if squaredDeviation
 		[meanYs, errYs, xs] = squaredMeanDeviation(ys, xs); % NOTE, this changes xs to a 'mean squared mode'!
 	else
 		[meanYs, errYs] = meanOfSamples(ys);
 	end
+	means{1} = meanYs;
+	errs{1} = errYs;
+
+	% Fill the rest with bootstrap resamples
+	for i = 1:bootstrapSamples
+		if squaredDeviation
+			[meanYs, errYs] = bootstrapSampleSquaredDeviation(ys); %xs already were adjusted above
+		else
+			[meanYs, errYs] = bootstrapSampleMean(ys);
+		end
+		means{i+1} = meanYs;
+		errs{i+1} = errYs;
+	end
+
+
 	% recursive call with bootstrapSamples = 0
 	newOpt = opt;
 	newOpt.bootstrapSamples = 0;
-	[exponentsAndOffsets, quality] = finiteSizeScaling(Ns, xs, meanYs, errYs, newOpt, plotopt);
 
+	nThreads = nproc();
+	[parPs, parQuals] = parcellfun(nThreads, @(y, dy) finiteSizeScaling(Ns, xs, y, dy, newOpt, plotopt),
+			means, errs, 'UniformOutput', false);
+	
+	% Extract the regular results
+	exponentsAndOffsets = parPs{1};
+	quality = parQuals{1};
+
+
+	% Plot the collapse
 	% TODO this shouldn't have to be here explicitly -- wrap things up some more to avoid duplication
 	if singleExponent
 		% HACK
@@ -287,10 +321,10 @@ else
 	else
 		finiteSizeCollapse(exponentsAndOffsets, scalingFunction, Ns, xs, meanYs, errYs)
 	end
-	sleep(1);
+	sleep(1e-9);
 
 
-
+	% Check if we had bootstrap samples
 	% Useful if you want to temporarily disable bootstrapping, but you 
 	% want to keep feeding in 2D arrays with the data of all runs.
 	if bootstrapSamples < 0
@@ -299,35 +333,16 @@ else
 		return
 	end
 
-
-
-	% Resample for error
+	% Extract bootstrap results
 	ps = zeros(bootstrapSamples, numel(exponentsAndOffsets));
 	quals = zeros(bootstrapSamples, 1);
-	moreWasOn = page_screen_output;
-	more off;
-	for s = 1:bootstrapSamples
-		printf('Bootstrap sample %d of %d\n', s, bootstrapSamples);
-
-		if squaredDeviation
-			[meanYs, errYs] = bootstrapSampleSquaredDeviation(ys); %xs already were adjusted above
-		else
-			[meanYs, errYs] = bootstrapSampleMean(ys);
-		end
-
-		% recursive call with bootstrapSamples = 0
-		[thisp, qual] = finiteSizeScaling(Ns, xs, meanYs, errYs, newOpt, plotopt);
-
-		ps(s, :) = thisp';
-		quals(s) = qual;
+	for i = 1:bootstrapSamples
+		ps(i, :) = parPs{i+1}';
+		quals(i) = parQuals{i+1};
 	end
-	printf('\n');
-	if moreWasOn
-		more on;
-	end
-
 	exponentsAndOffsetsErr = std(ps, 0, 1);
 	qualityErr = std(quals);
+
 
 	% standard deviation of standard deviation
 	% http://stats.stackexchange.com/questions/631/standard-deviation-of-standard-deviation
@@ -335,9 +350,7 @@ else
 	stdOfStdFactor = gamma((n-1)/2)/gamma(n/2) * sqrt((n-1)/2 - (gamma(n/2)/gamma((n-1)/2))^2) % relative error of the error estimate!
 
 
-
 	if not(isempty(plotopt))
-		% Determine fit for all data before resampling for error
 		if squaredDeviation
 			[meanYs, errYs] = squaredMeanDeviation(ys);
 		else
@@ -345,6 +358,5 @@ else
 		end
 		makeFiniteSizeCollapsePlot(exponentsAndOffsets, exponentsAndOffsetsErr, quality, qualityErr, scalingFunction, Ns, xs, meanYs, errYs, opt, plotopt)
 	end
-
 end
 
