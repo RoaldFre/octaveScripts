@@ -14,6 +14,7 @@ end
 destDir = plotopt.destDir;
 relImgDir = plotopt.relImgDir;
 graphFilePrefix = plotopt.graphFilePrefix;
+resultFilePrefix = plotopt.resultFilePrefix;
 T = plotopt.T;
 measurement = plotopt.measurement;
 quantity = plotopt.quantity;
@@ -59,13 +60,15 @@ end
 if opt.rescaleWithSize
 	if opt.singleExponent
 		infiniteSizeScaling = sprintf('N^{%s}', delta);;
-		parameters = sprintf('$\\beta = %s$', numErr2tex(params(1), paramErrs(1)));
+		paramaterStr = sprintf('$\\beta = %s$', numErr2tex(params(1), paramErrs(1)));
+		parameterNames = {'\beta'};
 	elseif opt.twoTimescales
 		error 'twoTimescales not yet implemented for rescale with size'
 	else
 		% two separate exponents
 		infiniteSizeScaling = 'N^{\delta}';
-		parameters = sprintf('$\\delta = %s$, $\\beta = %s$',
+		parameterNames = {'\delta','\beta'};
+		paramaterStr = sprintf('$\\delta = %s$, $\\beta = %s$',
 				numErr2tex(params(1), paramErrs(1)),
 				numErr2tex(params(2), paramErrs(2)));
 	end
@@ -73,21 +76,23 @@ else
 	% rescale with time
 	if opt.singleExponent
 		infiniteSizeScaling = sprintf('t^{%s/\\beta}', delta);
-		parameters = sprintf('$\\beta = %s$', numErr2tex(params(1), paramErrs(1)));
+		parameterNames = {'\beta'};
+		paramaterStr = sprintf('$\\beta = %s$', numErr2tex(params(1), paramErrs(1)));
 	elseif opt.twoTimescales
 		error 'twoTimescales not yet implemented'
 	else
 		% two separate exponents
 		infiniteSizeScaling = 't^{\alpha}';
-		parameters = sprintf('$\\alpha = %s$, $\\beta = %s$',
+		parameterNames = {'\alpha','\beta'};
+		paramaterStr = sprintf('$\\alpha = %s$, $\\beta = %s$',
 				numErr2tex(params(1), paramErrs(1)),
 				numErr2tex(params(2), paramErrs(2)));
 	end
 end
-scalingForm = sprintf('$%s = %s F(t/N^\\beta)$', observable, infiniteSizeScaling);
+scalingForm = sprintf('%s = %s F(t/N^\\beta)', observable, infiniteSizeScaling);
 
 
-caption = sprintf('Collapse of the scaling function for the measurement of %s %s $%s$ at temperature $T = %d^\\circ$C for a scaling of the form %s, with (fitted) parameter values %s. The quality of the collapse is $Q = %s$.', sqDevStr, measurement, quantity, T, scalingForm, parameters, numErr2tex(quality, qualityErr));
+caption = sprintf('Collapse of the scaling function for the measurement of %s %s $%s$ at temperature $T = %d^\\circ$C for a scaling of the form $%s$, with (fitted) parameter values %s. The quality of the collapse is $Q = %s$.', sqDevStr, measurement, quantity, T, scalingForm, paramaterStr, numErr2tex(quality, qualityErr));
 
 NsStr = '';
 for N = Ns
@@ -95,11 +100,39 @@ for N = Ns
 end
 NsStr = NsStr(1:end-1);
 
+NsStrh = '';
+for N = Ns
+	NsStrh = [NsStrh, num2str(N),', '];
+end
+NsStrh = NsStrh(1:end-2);
+
+
+resultFile = finiteSizeScalingFilename([resultFilePrefix,'_collap',NsStr], opt);
+
+save('-b', '-z', [resultFile,'_raw'], 'params', 'paramErrs', 'quality', 'qualityErr', 'scalingFunction', 'Ns', 'xs', 'ys', 'dys', 'opt', 'plotopt');
+
+f = fopen(resultFile, 'w');
+fprintf(f, 'observable:%s\n', observable);
+fprintf(f, 'scalingForm:%s\n', scalingForm);
+fprintf(f, 'theoreticalDelta:%s\n', delta);
+fprintf(f, 'numParams:%d\n', numel(params));
+for i = 1:numel(params)
+	fprintf(f, '%s:%s\n', parameterNames{i}, numErr2tex(params(i), paramErrs(i)));
+end
+for i = 1:numel(params)
+	fprintf(f, '1/%s:%s\n', parameterNames{i}, numErr2tex(1/params(i), paramErrs(i)/params(i)^2));
+end
+fprintf(f, 'qual:%s\n', numErr2tex(quality, qualityErr));
+fprintf(f, 'T:%d\n', T);
+fprintf(f, 'Ns:%s\n', NsStrh);
+fclose(f);
+
+
 graphFile = finiteSizeScalingFilename([graphFilePrefix,'_collap',NsStr], opt);
 ylabrule  = '-1.5cm';
 xlab      = '$t/N^\beta$ (s)'
 ylab      = ['$',observable,'/',infiniteSizeScaling,'$'];
-width     = '1000';
+width     = '900';
 height    = '800';
 
 makeGraph(graphFile,caption,destDir,relImgDir,xlab,ylab,ylabrule,width,height);
