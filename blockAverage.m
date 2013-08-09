@@ -1,3 +1,4 @@
+% Average together blocks of approximately blockSize
 function ys = blockAverage(xs, blockSize)
 
 if blockSize == 1
@@ -6,13 +7,12 @@ if blockSize == 1
 end
 
 inputSize = numel(xs);
-finalSize = ceil(inputSize / blockSize);
+finalSize = round(inputSize / blockSize);
+
+indices = round(linspace(1, inputSize+1, finalSize+1));
 
 ys = zeros(1, finalSize);
-
-for i = 1:finalSize-1
-	ys(i) = mean(xs((i-1)*blockSize + 1 : i*blockSize));
+for i = 1:finalSize
+	ys(i) = mean(xs(indices(i) : indices(i+1) - 1));
 end
-
-ys(finalSize) = mean(xs((finalSize-1)*blockSize + 1 : inputSize));
 
