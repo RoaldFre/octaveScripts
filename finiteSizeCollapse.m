@@ -4,11 +4,8 @@
 % exponentsAndOffsets: Offsets are optional
 % function finiteSizeCollapse(exponentsAndOffsets, Ns, xs, ys, dys)
 function finiteSizeCollapse(exponentsAndOffsets, scalingFunction, Ns, xs, ys, dys)
-alpha = exponentsAndOffsets(1);
-beta = exponentsAndOffsets(2);
 
 [xs, ys, dys] = feval(scalingFunction, exponentsAndOffsets, Ns, xs, ys, dys);
-S = overlapQuality(xs, ys, dys);
 
 numDataSets = numel(xs);
 
@@ -25,9 +22,10 @@ for i = 1:numDataSets
 
 	plotColorsI = round(size(plotColors, 1) * i / numDataSets);
 	set(h ,'Color', plotColors(plotColorsI,:));
-	plotLegend{i} = ["N = ",num2str(Ns(i))];
+	plotLegend{i} = ["$N$ = ",num2str(Ns(i))];
 end
-title(['alpha = ',num2str(alpha),', beta = ',num2str(beta),', S = ',num2str(S)]);
-legend(plotLegend);
+%S = overlapQuality(xs, ys, dys);
+%title(['parameters = ',num2str(exponentsAndOffsets'),', S = ',num2str(S)]);
+legend(plotLegend, 'location', 'northwest');
 sleep(1e-9);
 hold off;
