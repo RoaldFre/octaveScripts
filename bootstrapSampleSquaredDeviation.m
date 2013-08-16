@@ -3,8 +3,12 @@
 %
 % Output: means and errors (or cell of means and errors) of the squared 
 % deviation of a bootstrap sample of the data.
-function [sqDev, err] = bootstrapSampleSquaredDeviation(data)
+function [sqDev, err, newTime] = bootstrapSampleSquaredDeviation(data, time)
+
+if nargin < 2
+	time = {};
+end
 
 data = bootstrapResample(data);
-[sqDev, err] = squaredMeanDeviation(data);
+[sqDev, err, newTime] = squaredMeanDeviation(data, time);
 
