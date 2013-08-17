@@ -92,6 +92,9 @@ for i = 1:numDataSets
 	numericalMask = abs(deviation ./ (meanData(2:end) + meanData(1))) > epsilon/2;
 	% Last not-significantly-nonzero index:
 	significanceIndex = find(sqDev{i} - significanceSigma * errs{i} <= 0, 1, 'last');
+	if isempty(significanceIndex);
+		significanceIndex = 1;
+	end
 	significanceMask = (1:numel(sqDev{i})) >= significanceIndex;
 
 	mask{i} = true(size(sqDev{i}));
