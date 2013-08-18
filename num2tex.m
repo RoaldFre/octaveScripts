@@ -25,6 +25,6 @@ else
 	if mantissa == 1
 		str = ['10^{',num2str(exponent),'}'];
 	else
-		str = [num2str(mantissa),' \cdot 10^{',num2str(exponent),'}'];
+		str = [num2str(mantissa),' \times 10^{',num2str(exponent),'}'];
 	end
 end
