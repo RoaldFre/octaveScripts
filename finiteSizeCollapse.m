@@ -9,7 +9,7 @@ function finiteSizeCollapse(exponentsAndOffsets, scalingFunction, Ns, xs, ys, dy
 
 numDataSets = numel(xs);
 
-plotColors = colormap;
+colors = plotColors(numDataSets);
 plotLegend = cell(1, numDataSets);
 clf; hold on;
 for i = 1:numDataSets
@@ -20,8 +20,7 @@ for i = 1:numDataSets
 	%h = loglog(xs{i}, ys{i});
 	%h = loglog(xs{i}, ys{i}, xs{i}, ys{i}.*errFrac, '.', xs{i}, ys{i}./errFrac, '.');
 
-	plotColorsI = round(size(plotColors, 1) * i / numDataSets);
-	set(h ,'Color', plotColors(plotColorsI,:));
+	set(h ,'Color', colors(i,:));
 	plotLegend{i} = ["$N$ = ",num2str(Ns(i))];
 end
 %S = overlapQuality(xs, ys, dys);

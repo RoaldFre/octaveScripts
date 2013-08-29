@@ -1,8 +1,14 @@
 % Documentation by example:
 %   '123 \pm 5' = numErr2tex(123.456, 5.52)
 % 
-% function str = numErr2tex(num, err)
-function str = numErr2tex(num, err)
+% function str = numErr2tex(num, err, pmStr)
+% pmStr: optional argument to replace ' \pm ' above. E.g. replace it by '&' 
+% for use in tables or centering.
+function str = numErr2tex(num, err, pmStr)
+
+if nargin < 3
+	pmStr = ' \pm ';
+end
 
 if err == 0
 	printf("numErr2tex: warning: given error was zero!\n");
@@ -22,7 +28,7 @@ errMantissa = err / 10^errExponent;
 
 % If error has bigger exponent than number -> 0
 if errExponent > floor(log10(abs(num)))
-	str = ['(0 \pm ',num2str(errMantissa),') \cdot 10^{',num2str(errExponent),'}'];
+	str = ['(0',pmStr,num2str(errMantissa),') \times 10^{',num2str(errExponent),'}'];
 	return
 end
 
@@ -38,7 +44,7 @@ numMantissa = num / 10^numExponent;
 % Don't use scientific notation for errors between X and 0.00X, or if the exponent would be zero
 if (-3 <= errExponent && errExponent < 1) || numExponent == 0
 	numstr = roundsdStr(roundsd(num,sd), sd);
-	str = [numstr,' \pm ',num2str(err)];
+	str = [numstr,pmStr,num2str(err)];
 	return;
 end
 
@@ -47,5 +53,5 @@ end
 mantissaStr = roundMantissaSd(numMantissa, sd);
 errLeadingZeros = numExponent - errExponent;
 errStr = sprintf(['%.',num2str(errLeadingZeros),'f'], err/10^numExponent);
-str = ['(',mantissaStr,' \pm ',errStr,') \cdot 10^{',num2str(numExponent),'}'];
+str = ['(',mantissaStr,pmStr,errStr,') \times 10^{',num2str(numExponent),'}'];
 
