@@ -1,4 +1,4 @@
-% Generates a stand-alone pdf file of the current plot, with all the LaTeX 
+% Generates a stand-alone eps file of the current plot, with all the LaTeX 
 % goodies.
 %
 % Parameters (all are STRINGS):
@@ -44,5 +44,7 @@ function makeGraphPresentation(name,destdir,xlab,ylab,ylabrule,width,height);
 		'pdfcrop ',name,'.pdf; ',...
 		'mv ',name,'-crop.pdf ',name,'.pdf; ',...
 		'rm ',name,'.tex ',name,'-inc.pdf ',name,'.log ',name,'.aux; ',...
+		'pdftops -eps ',name,'.pdf ',name,'.eps; rm ',name,'.pdf',...
 		]);
+		% Comment last line above if you want to output to pdf instead of eps
 end
