@@ -4,6 +4,11 @@
 % Works for 1D and 2D data.
 function decim = decimateSimple(data, factor)
 
+if (factor == 1)
+	decim = data;
+	return
+end
+
 dims = size(data);
 if (dims(1) != 1 && mod(dims(1),factor) != 0)
 	error "Invalid factor: not a divisor of dimensions"
