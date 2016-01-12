@@ -4,6 +4,13 @@
 % Works for 1D and 2D data.
 function decim = decimateSimple(data, factor)
 
+if nargin != 2
+	error "usage: decimateSimple(data, factor)"
+end
+if !isscalar(factor) || round(factor) != factor || factor <= 0
+	error "decimation factor should be a positive integer"
+end
+
 if (factor == 1)
 	decim = data;
 	return
@@ -11,7 +18,7 @@ end
 
 dims = size(data);
 if (dims(1) != 1 && mod(dims(1),factor) != 0)
-	error "Invalid factor: not a divisor of dimensions"
+	error "Invalid decimation factor: not a divisor of dimensions"
 end
 if (dims(2) != 1 && mod(dims(2),factor) != 0)
 	error "Invalid factor: not a divisor of dimensions"
